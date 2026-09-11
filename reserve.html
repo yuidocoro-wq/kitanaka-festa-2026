@@ -341,6 +341,22 @@
   F.$("#other-list").addEventListener("change", refreshOthers);
   F.$("#other-panel").addEventListener("change", refreshOthers);
   refreshOthers();
+  /* 満席の枠は選べなくする（受付係に残りを聞く） */
+  if (!F.isDemo()) {
+    F.fetchStatus().then(function (map) {
+      allInputs().forEach(function (i) {
+        var st = map[i.value];
+        if (st && typeof st.remaining === "number" && st.remaining <= 0) {
+          i.checked = false; i.disabled = true;
+          var wrap = i.closest("label"); wrap.style.opacity = ".55";
+          var b = wrap.querySelector("b"); if (b && b.textContent.indexOf("満席") < 0) b.textContent += "　満席";
+        }
+      });
+      if (mainBooth && map[mainBooth.id] && map[mainBooth.id].remaining <= 0) {
+        showMsg("info", "「" + mainBooth.name + "」は満席です。当日の空き枠をお試しいただくか、ほかの体験をお選びください。");
+      }
+    }).catch(function () { });
+  }
   if (F.qs("more") === "1") { F.$("#other-open").click(); var fb = F.$("[data-exp-btn]"); if (fb) fb.click(); }
   F.$("#other-list").addEventListener("change", updateChildAge);
   F.$("#other-panel").addEventListener("change", updateChildAge);

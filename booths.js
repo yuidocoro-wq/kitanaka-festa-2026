@@ -96,12 +96,14 @@ window.FESTA_DATA = {
    "time": "前半・後半 各1コマ（30分・案）",
    "duration": "30分",
    "target": "大人",
-   "capacity": 0,
-   "reserve": false,
-   "unit": "",
-   "desc": "頑張らないトレーニングを体験。予約なしで参加できます。",
+   "capacity": 15,
+   "reserve": true,
+   "unit": "名",
+   "desc": "頑張らないトレーニングを体験。人数はこれから決めます（予約制）。",
    "exhibitor": "kubatore",
-   "status": "仮"
+   "status": "仮",
+   "capacityNote": "要確認（人数はこれから決める・仮に15）",
+   "meet": "開始5分前にお越しください。来られない場合は、当日枠の方にお譲りします"
   },
   {
    "id": "ashimomi",
