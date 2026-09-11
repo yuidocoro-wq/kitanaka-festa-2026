@@ -225,7 +225,7 @@ function buildSummary_(ss) {
   var top = rows.length + 3;
   sh.getRange(top, 1).setValue('当日のまとめ').setFontWeight('bold');
   sh.getRange(top + 1, 1, 11, 2).setValues([
-    ['予約人数合計（大人＋子ども・キャンセル除く）', "=SUMIFS('" + SH_RESERVE + "'!G:G,'" + SH_RESERVE + "'!L:L,\"<>" + ST_CANCEL + "\")+SUMIFS('" + SH_RESERVE + "'!H:H,'" + SH_RESERVE + "'!L:L,\"<>" + ST_CANCEL + "\")"],
+    ['申込の人数合計（延べ。同じ人が2回申し込むと2）', "=SUMIFS('" + SH_RESERVE + "'!G:G,'" + SH_RESERVE + "'!L:L,\"<>" + ST_CANCEL + "\")+SUMIFS('" + SH_RESERVE + "'!H:H,'" + SH_RESERVE + "'!L:L,\"<>" + ST_CANCEL + "\")"],
     ['　うち子ども', "=SUMIFS('" + SH_RESERVE + "'!H:H,'" + SH_RESERVE + "'!L:L,\"<>" + ST_CANCEL + "\")"],
     ['来場者合計（大人＋子ども）', "=SUMIFS('" + SH_RESERVE + "'!G:G,'" + SH_RESERVE + "'!L:L,\"" + ST_CAME + "\")+SUMIFS('" + SH_RESERVE + "'!H:H,'" + SH_RESERVE + "'!L:L,\"" + ST_CAME + "\")"],
     ['　うち子ども', "=SUMIFS('" + SH_RESERVE + "'!H:H,'" + SH_RESERVE + "'!L:L,\"" + ST_CAME + "\")"],
@@ -233,7 +233,7 @@ function buildSummary_(ss) {
     ['予約したまま未来場', "=COUNTIF('" + SH_RESERVE + "'!L:L,\"" + ST_RESERVED + "\")"],
     ['キャンセル', "=COUNTIF('" + SH_RESERVE + "'!L:L,\"" + ST_CANCEL + "\")"],
     ['体験を予約した人（同じ人は1・目標50）', "=IFERROR(COUNTUNIQUEIFS('" + SH_PEOPLE + "'!G:G,'" + SH_PEOPLE + "'!E:E,TRUE,'" + SH_PEOPLE + "'!F:F,\"<>" + ST_CANCEL + "\"),0)"],
-    ['予約に入っている人 全員（同じ人は1）', "=IFERROR(COUNTUNIQUEIFS('" + SH_PEOPLE + "'!G:G,'" + SH_PEOPLE + "'!F:F,\"<>" + ST_CANCEL + "\"),0)"],
+    ['★予約に入っている人（同じ人は1・名前と生年月日で判定）', "=IFERROR(COUNTUNIQUEIFS('" + SH_PEOPLE + "'!G:G,'" + SH_PEOPLE + "'!F:F,\"<>" + ST_CANCEL + "\"),0)"],
     ['当日名簿の人数（入口の手書きを写した分）', "=COUNTA('" + SH_VISIT + "'!A2:A)"],
     ['★入口の来場者数（いま・同じ人は1）', "=IFERROR(COUNTUNIQUEIFS('" + SH_PEOPLE + "'!G:G,'" + SH_PEOPLE + "'!F:F,\"" + ST_CAME + "\"),0)"]
   ]);

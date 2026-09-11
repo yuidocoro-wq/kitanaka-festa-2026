@@ -504,10 +504,12 @@
 
   /* ---------- 完了（チケット） ---------- */
   function done(no, name, booths, demo) {
+    var people = window.__lastPeople || [];
     F.$("#sending").hidden = true;
     F.$("#form-area").hidden = true;
     F.$("#done-area").hidden = false;
     document.documentElement.scrollTop = 0; document.body.scrollTop = 0;
+    try {
 
     F.$("#t-no").textContent = no;
     F.$("#t-name").textContent = name + " 様" + (people.length > 1 ? "（ほか" + (people.length - 1) + "名）" : "");
@@ -516,7 +518,6 @@
     F.$("#t-meet").textContent = meets.join("／") || "係の者がご案内します";
     F.$("#t-date").textContent = E.dateLabel + "　" + E.time;
     F.$("#t-venue").textContent = E.venue;
-    var people = window.__lastPeople || [];
     F.$("#t-booths").innerHTML = booths.map(function (b) {
       var full = F.booth(b.id);
       var time = b.time || (full ? full.time : "");
@@ -534,7 +535,9 @@
     F.$("#t-contact").textContent = E.contact;
 
     if (!demo) F.saveLastNo(no);
+    } catch (e) { /* 表示の細かい部分で失敗しても、完了画面は出す */ }
     window.scrollTo(0, 0);
+    window.setTimeout(function () { window.scrollTo(0, 0); }, 50);
   }
 
   F.$("#foot-organizer").textContent = E.organizer;
