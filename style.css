@@ -616,3 +616,15 @@ input:focus, select:focus, textarea:focus{ outline-color:var(--green); border-co
 .person.card{ padding:12px 14px; margin-bottom:10px; }
 .person .field label{ font-size:16px; margin-bottom:4px; }
 .person input, .person select{ min-height:48px; }
+
+/* 送信中 */
+.sending{ position:fixed; inset:0; background:rgba(255,255,255,.85); z-index:60; display:flex; align-items:center; justify-content:center; }
+.sending-box{ text-align:center; font-size:20px; font-weight:700; color:var(--green-deep); }
+.spin{ width:56px; height:56px; border:6px solid #DDE7E2; border-top-color:var(--green); border-radius:50%; margin:0 auto 14px; animation:spin 1s linear infinite; }
+@keyframes spin{ to{ transform:rotate(360deg); } }
+/* 予約完了 */
+.splash{ text-align:center; background:#EAF3EF; border:3px solid var(--green); border-radius:18px; padding:26px 16px 18px; margin:8px 0 20px; animation:pop .5s ease-out; }
+.splash-t{ font-size:28px; font-weight:700; color:var(--green-deep); margin:10px 0 6px; font-family:"Zen Maru Gothic","M PLUS 1p",sans-serif; }
+.splash-s{ font-size:16px; color:var(--ink-soft); margin:0; }
+@keyframes pop{ from{ transform:scale(.9); opacity:0; } to{ transform:scale(1); opacity:1; } }
+.p-booths{ background:#F4F8F6; border-radius:10px; padding:8px 10px; margin-top:4px; }

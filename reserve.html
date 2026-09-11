@@ -103,7 +103,11 @@
 
     <!-- 完了画面（チケット） -->
     <section id="done-area" hidden>
-      <h2><span class="bar"></span>ご予約をうけたまわりました</h2>
+      <div class="splash">
+        <svg viewBox="0 0 80 80" width="88" height="88" aria-hidden="true"><circle cx="40" cy="40" r="36" fill="#468977"/><path d="M22 41l12 12 24-26" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <p class="splash-t">ご予約を承りました！</p>
+        <p class="splash-s">確認メールをお送りしました。当日お会いできるのを楽しみにしています。</p>
+      </div>
 
       <div class="ticket">
         <div class="ticket-head">
@@ -141,6 +145,8 @@
 
   </div>
 </main>
+
+<div id="sending" class="sending" hidden><div class="sending-box"><div class="spin"></div><p>送信しています…<br><span class="small">10秒ほどかかることがあります</span></p></div></div>
 
 <footer class="site-foot no-print">
   <div class="wrap">
@@ -210,11 +216,31 @@
       '<div class="field" style="margin-bottom:10px;"><label>お名前</label><input type="text" class="p-name" autocomplete="name"></div>' +
       '<div class="field" style="margin-bottom:10px;"><label>生年月日</label><input type="text" class="p-birth" inputmode="numeric" placeholder="例：1985/4/1"></div>' +
       '<div class="field" style="margin-bottom:10px;"><label>大人・子ども</label><select class="p-kind"><option value="大人">大人</option><option value="子ども">子ども（中学生まで）</option></select></div>' +
-      '<label class="check" style="margin-bottom:6px;"' + (raceMain ? ' hidden' : '') + '><input type="checkbox" class="p-join" checked><span class="t"><b>この方が体験を受けます</b><span>付き添いだけの方はチェックを外してください</span></span></label>' +
+      '<div class="p-booths"><p class="small" style="margin:0 0 4px;font-weight:700;">この方が受ける体験（チェック）</p><div class="p-booth-list"></div></div>' +
       (i > 0 ? '<button type="button" class="btn btn-quiet p-del" style="min-height:40px;margin:6px 0 0;">この行を消す</button>' : "") +
       "</div>";
   }
-  function addPerson() { var i = F.$$("[data-person]").length; peopleEl.insertAdjacentHTML("beforeend", personRow(i)); }
+  function addPerson() { var i = F.$$("[data-person]").length; peopleEl.insertAdjacentHTML("beforeend", personRow(i)); renderPersonBooths(); }
+  /* いま選ばれている体験（メイン＋ほかにも予約）を、人ごとのチェックにする */
+  function chosenBoothObjs() {
+    var out = [];
+    if (typeof mainBooth !== "undefined" && mainBooth) out.push(mainBooth);
+    F.$$("#other-list input:checked, #other-panel input:checked").forEach(function (i) { var b = F.booth(i.value); if (b && out.indexOf(b) < 0) out.push(b); });
+    return out;
+  }
+  function boothLabel(b) { var g = b.group ? F.booth(b.group) : null; return (g ? g.name + "　" + b.short : b.name) + (b.time && !b.group ? "（" + b.time + "）" : ""); }
+  function renderPersonBooths() {
+    var list = chosenBoothObjs();
+    F.$$("[data-person]").forEach(function (row, idx) {
+      var box = row.querySelector(".p-booth-list");
+      var prev = {}; F.$$("input", box).forEach(function (i) { prev[i.value] = i.checked; });
+      if (!list.length) { box.innerHTML = '<p class="small" style="margin:0;">体験をえらぶと、ここに出ます。</p>'; return; }
+      box.innerHTML = list.map(function (b) {
+        var on = (b.id in prev) ? prev[b.id] : (idx === 0);
+        return '<label class="check" style="margin-bottom:6px;padding:8px 10px;"><input type="checkbox" class="p-b" value="' + esc(b.id) + '"' + (on ? " checked" : "") + '><span class="t"><b style="font-size:16px;">' + esc(boothLabel(b)) + "</b></span></label>";
+      }).join("");
+    });
+  }
   addPerson();
   F.$("#add-person").addEventListener("click", addPerson);
   peopleEl.addEventListener("click", function (e) {
@@ -227,7 +253,8 @@
         name: row.querySelector(".p-name").value.trim(),
         birth: row.querySelector(".p-birth").value.trim(),
         kind: row.querySelector(".p-kind").value,
-        join: row.querySelector(".p-join").checked
+        booths: F.$$(".p-b:checked", row).map(function (i) { return i.value; }),
+        join: F.$$(".p-b:checked", row).length > 0
       };
     });
   }
@@ -247,7 +274,6 @@
       row.querySelector(".p-name").value = pp.name || "";
       row.querySelector(".p-birth").value = pp.birth || "";
       row.querySelector(".p-kind").value = pp.kind || "大人";
-      row.querySelector(".p-join").checked = pp.join !== false;
     });
     F.$("#f-address").value = v.address || "";
     F.$("#f-phone").value = v.phone || ""; F.$("#f-email").value = v.email || "";
@@ -340,7 +366,10 @@
   F.$("#other-list").innerHTML = others.map(function (b) { return timeRow(b, inputType); }).join("");
   F.$("#other-list").addEventListener("change", refreshOthers);
   F.$("#other-panel").addEventListener("change", refreshOthers);
+  F.$("#other-list").addEventListener("change", renderPersonBooths);
+  F.$("#other-panel").addEventListener("change", renderPersonBooths);
   refreshOthers();
+  renderPersonBooths();
   /* 満席の枠は選べなくする（受付係に残りを聞く） */
   if (!F.isDemo()) {
     F.fetchStatus().then(function (map) {
@@ -403,7 +432,13 @@
     if (!people.length) { showMsg("err", "参加する人をご記入ください。"); return; }
     var adultsN = 0, childrenN = 0, joinN = 0;
     people.forEach(function (pp) { if (pp.kind === "子ども") childrenN++; else adultsN++; if (pp.join) joinN++; });
-    if (!raceMain && joinN < 1) { showMsg("err", "体験を受ける方に1人はチェックを入れてください。"); return; }
+    var chosenList = chosenBoothObjs(), countsBy = {};
+    for (var ci = 0; ci < chosenList.length; ci++) {
+      var cb = chosenList[ci], n = 0;
+      people.forEach(function (pp) { if (pp.booths.indexOf(cb.id) >= 0) n++; });
+      if (n < 1) { showMsg("err", "「" + boothLabel(cb) + "」を受ける人に、チェックをつけてください。"); return; }
+      countsBy[cb.id] = n;
+    }
     if (!address) { showMsg("err", "住所をご記入ください。保険の登録に使います。"); F.$("#f-address").focus(); return; }
     if (!phone) { showMsg("err", "電話番号をご記入ください。当日のご連絡に使います。"); F.$("#f-phone").focus(); return; }
     if (!email || email.indexOf("@") < 1) { showMsg("err", "メールアドレスをご確認ください。確認メールのお届け先になります。"); F.$("#f-email").focus(); return; }
@@ -425,12 +460,14 @@
       childAge: childAgeField.hidden ? "" : F.$("#f-childage").value.trim(),
       booths: ids,
       count: raceMain ? 1 : Math.max(1, joinN),
+      counts: countsBy,
       note: F.$("#f-note").value.trim()
     };
 
     btn.disabled = true;
     btn.textContent = "送っています…";
     msgArea.innerHTML = "";
+    F.$("#sending").hidden = false;
 
     /* テスト表示（gasUrlが空）のときは送信せず、ダミー番号で完了画面を出す */
     window.__lastPeople = people;
@@ -452,11 +489,13 @@
           return { id: id, name: b ? b.name : id, time: b ? b.time : "" };
         }), false);
       } else {
+        F.$("#sending").hidden = true;
         btn.disabled = false;
         btn.textContent = "この内容で予約する";
         showMsg("err", F.friendlyError(j && j.error, j && j.full));
       }
     }).catch(function () {
+      F.$("#sending").hidden = true;
       btn.disabled = false;
       btn.textContent = "この内容で予約する";
       showMsg("err", F.friendlyError("network"));
@@ -465,21 +504,25 @@
 
   /* ---------- 完了（チケット） ---------- */
   function done(no, name, booths, demo) {
+    F.$("#sending").hidden = true;
     F.$("#form-area").hidden = true;
     F.$("#done-area").hidden = false;
+    document.documentElement.scrollTop = 0; document.body.scrollTop = 0;
 
     F.$("#t-no").textContent = no;
-    var people = window.__lastPeople || [];
     F.$("#t-name").textContent = name + " 様" + (people.length > 1 ? "（ほか" + (people.length - 1) + "名）" : "");
     var meets = [];
     booths.forEach(function (b) { var fb = F.booth(b.id); var g = fb && fb.group ? F.booth(fb.group) : null; var m = (fb && fb.meet) || (g && g.meet); if (m && meets.indexOf(m) < 0) meets.push(m); });
     F.$("#t-meet").textContent = meets.join("／") || "係の者がご案内します";
     F.$("#t-date").textContent = E.dateLabel + "　" + E.time;
     F.$("#t-venue").textContent = E.venue;
+    var people = window.__lastPeople || [];
     F.$("#t-booths").innerHTML = booths.map(function (b) {
       var full = F.booth(b.id);
       var time = b.time || (full ? full.time : "");
-      return esc(b.name || (full ? full.name : b.id)) + (time ? "<br><span class='small'>" + esc(time) + "</span>" : "");
+      var who = people.filter(function (pp) { return (pp.booths || []).indexOf(b.id) >= 0; }).map(function (pp) { return pp.name; });
+      return esc(b.name || (full ? full.name : b.id)) + (time ? "<br><span class='small'>" + esc(time) + "</span>" : "") +
+        (who.length ? "<br><span class='small'>受ける人：" + esc(who.join("・")) + "</span>" : "");
     }).join("<br>");
 
     F.$("#t-mail").textContent = demo

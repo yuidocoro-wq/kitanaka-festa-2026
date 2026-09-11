@@ -28,6 +28,7 @@ var TZ = 'Asia/Tokyo';
 
 /** イベント情報（booths.json の event と同じ内容） */
 var EVENT = {
+  siteUrl: 'https://yuidocoro-wq.github.io/kitanaka-festa-2026/',
   name: '北中城村ウェルネススポーツフェスタ2026',
   dateLabel: '2026年12月13日（日）',
   time: '10:00〜15:00',
@@ -100,7 +101,7 @@ function setup() {
   ensureSheet_(ss, SH_DETAIL, ['予約番号', 'ブースID', 'ブース名', '時間', '状態', '人数']);
   var booth = ensureSheet_(ss, SH_BOOTH, ['ブースID', 'ブース名', '時間', '予約枠', '受付中', '備考']);
   ensureSheet_(ss, SH_LOG, ['日時', '予約番号', '操作', 'メモ']);
-  ensureSheet_(ss, SH_PEOPLE, ['予約番号', '名前', '生年月日', '区分', '体験を受ける', '状態', '照合キー（名前|生年月日）']);
+  ensureSheet_(ss, SH_PEOPLE, ['予約番号', '名前', '生年月日', '区分', '体験を受ける', '状態', '照合キー（名前|生年月日）', '受ける体験']);
   ensureSheet_(ss, SH_VISIT, ['名前', '生年月日', '住所', '電話', '区分', '体験したブース', '予約番号（あれば）', 'メモ']);
 
   // ブース設定が空のときだけ初期値を入れる（すでにある場合は触らない）
@@ -113,6 +114,7 @@ function setup() {
   booth.setColumnWidth(6, 300);
 
   buildSummary_(ss);
+  buildBoothView_(ss);
 
   // 空の初期シートが残っていたら片づける
   var sheets = ss.getSheets();
@@ -138,9 +140,53 @@ function onOpen() {
   } catch (err) { /* UIがない実行では無視 */ }
 }
 
+var SH_BYBOOTH = 'ブース別一覧';
+
+/** ブース担当が見る表：ブースごとに「誰が・何時に・何人」 */
+function buildBoothView_(ss) {
+  var sh = ss.getSheetByName(SH_BYBOOTH);
+  if (!sh) sh = ss.insertSheet(SH_BYBOOTH);
+  sh.clear();
+  var booths = readBooths_(ss);
+  var row = 1;
+  sh.getRange(row, 1).setValue('ブースごとの予約（自動で更新。キャンセルは出ません）').setFontWeight('bold').setFontSize(13);
+  row += 2;
+  var headers = ['予約番号', '時間', 'お名前（代表）', '人数', '状態', '電話', '受ける人'];
+  for (var i = 0; i < booths.length; i++) {
+    var b = booths[i];
+    sh.getRange(row, 1).setValue('■ ' + b.name + '　' + b.time + '　（予約枠 ' + b.capacity + '）').setFontWeight('bold').setBackground('#EAF3EF');
+    sh.getRange(row, 1, 1, headers.length).setBackground('#EAF3EF');
+    row++;
+    sh.getRange(row, 1, 1, headers.length).setValues([headers]).setFontWeight('bold').setBackground('#468977').setFontColor('#FFFFFF');
+    row++;
+    var D = "'" + SH_DETAIL + "'", R = "'" + SH_RESERVE + "'", P = "'" + SH_PEOPLE + "'";
+    var f = "=IFERROR(SORT(FILTER({" +
+      D + "!A2:A," + D + "!D2:D," +
+      "ARRAYFORMULA(IFERROR(VLOOKUP(" + D + "!A2:A," + R + "!A:C,3,FALSE),\"\"))," +
+      D + "!F2:F," + D + "!E2:E," +
+      "ARRAYFORMULA(IFERROR(VLOOKUP(" + D + "!A2:A," + R + "!A:E,5,FALSE),\"\"))," +
+      "ARRAYFORMULA(IFERROR(VLOOKUP(" + D + "!A2:A&\"|\"&" + D + "!C2:C," + P + "!I:J,2,FALSE),\"\"))" +
+      "}," + D + "!B2:B=\"" + b.id + "\"," + D + "!E2:E<>\"" + ST_CANCEL + "\"),2,TRUE),\"（まだ予約はありません）\")";
+    sh.getRange(row, 1).setFormula(f);
+    row += Math.max(Number(b.capacity) || 0, 5) + 3;
+  }
+  sh.setColumnWidth(1, 90); sh.setColumnWidth(2, 130); sh.setColumnWidth(3, 160); sh.setColumnWidth(4, 50);
+  sh.setColumnWidth(5, 70); sh.setColumnWidth(6, 120); sh.setColumnWidth(7, 220);
+  sh.setFrozenRows(1);
+  /* 参加者タブの I:J に「予約番号|ブース名 → 受ける人の名前」の対応表を作る（ブース別一覧の受ける人 用） */
+  var shP = ss.getSheetByName(SH_PEOPLE);
+  if (shP) {
+    shP.getRange('I1:J1').setValues([['（自動）番号|体験', '（自動）受ける人']]).setFontWeight('bold');
+    shP.getRange('I2').setFormula("=IFERROR(ARRAYFORMULA(IF(A2:A=\"\",,A2:A&\"|\"&H2:H)),\"\")");
+    shP.getRange('J2').setFormula("=IFERROR(ARRAYFORMULA(IF(A2:A=\"\",,B2:B)),\"\")");
+  }
+}
+
 function rebuildSummary() {
+  var ssx = getSS_(); var shPx = ssx.getSheetByName(SH_PEOPLE); if (shPx) shPx.getRange('H1').setValue('受ける体験');
   buildSummary_(getSS_());
-  return '集計を作りなおしました。';
+  buildBoothView_(getSS_());
+  return '集計とブース別一覧を作りなおしました。';
 }
 
 function ensureSheet_(ss, name, headers) {
@@ -312,6 +358,9 @@ function apiCancelPage_(p) {
     } else if (String(found.values[R_STATUS - 1]) === ST_CANCEL) {
       ok = true;
       msg = 'この予約はすでにキャンセル済みです。';
+    } else if (String(p.confirm || '') !== '1') {
+      /* まず確認ページ。ここでは何も変えない */
+      return confirmCancelHtml_(no, String(found.values[R_NAME - 1] || ''), readDetail_(ss, no), token);
     } else {
       setStatus_(ss, found.row, no, ST_CANCEL);
       addLog_(ss, no, 'cancel', 'メールのリンクから');
@@ -360,14 +409,16 @@ function apiReserve_(d) {
       var pp = d.people[pi] || {};
       var pn = trim_(pp.name, 100);
       if (!pn) continue;
+      var pb = (pp.booths && pp.booths.length) ? pp.booths.map(function (x) { return String(x); }) : [];
       people.push({ name: pn, birth: trim_(pp.birth, 40), kind: (String(pp.kind) === '子ども' ? '子ども' : '大人'),
-                    join: !(pp.join === false || String(pp.join) === 'false') });
+                    join: pb.length ? true : !(pp.join === false || String(pp.join) === 'false'), booths: pb });
     }
   }
   if (people.length === 0) people.push({ name: name, birth: trim_(d.birth, 40), kind: '大人', join: true });
   var joinN = 0; adults = 0; children = 0;
   for (pi = 0; pi < people.length; pi++) { if (people[pi].kind === '子ども') children++; else adults++; if (people[pi].join) joinN++; }
   if (joinN >= 1) count = joinN;
+  var wantN = (d.counts && typeof d.counts === 'object') ? d.counts : {};   // ブースごとに受ける人数
 
   var lock = LockService.getScriptLock();
   try {
@@ -387,7 +438,7 @@ function apiReserve_(d) {
       var b = map[ids[i]];
       if (!b || !b.open) { full.push(ids[i]); continue; }
       var used = counts[b.id] || 0;
-      var need = (GROUP_UNIT_IDS.indexOf(b.id) >= 0) ? 1 : count;
+      var need = (GROUP_UNIT_IDS.indexOf(b.id) >= 0) ? 1 : (Number(wantN[b.id]) || count);
       if (used + need > b.capacity) { full.push(b.id); continue; }
       b.need = need;
       picked.push(b);
@@ -432,9 +483,10 @@ function apiReserve_(d) {
     if (shP) {
       var pRows = [];
       for (i = 0; i < people.length; i++) {
-        pRows.push([no, people[i].name, people[i].birth, people[i].kind, people[i].join, ST_RESERVED, people[i].name + '|' + people[i].birth]);
+        var bn = (people[i].booths || []).map(function (id) { return map[id] ? map[id].name : id; }).join('、');
+        pRows.push([no, people[i].name, people[i].birth, people[i].kind, people[i].join, ST_RESERVED, people[i].name + '|' + people[i].birth, bn]);
       }
-      shP.getRange(shP.getLastRow() + 1, 1, pRows.length, 7).setValues(pRows);
+      shP.getRange(shP.getLastRow() + 1, 1, pRows.length, 8).setValues(pRows);
     }
     SpreadsheetApp.flush();
 
@@ -588,8 +640,8 @@ function apiWalkin_(d) {
     var shP = ss.getSheetByName(SH_PEOPLE);
     if (shP) {
       var pRows = [];
-      for (i = 0; i < people.length; i++) pRows.push([no, people[i].name, people[i].birth, people[i].kind, true, ST_CAME, people[i].name + '|' + people[i].birth]);
-      shP.getRange(shP.getLastRow() + 1, 1, pRows.length, 7).setValues(pRows);
+      for (i = 0; i < people.length; i++) pRows.push([no, people[i].name, people[i].birth, people[i].kind, true, ST_CAME, people[i].name + '|' + people[i].birth, '']);
+      shP.getRange(shP.getLastRow() + 1, 1, pRows.length, 8).setValues(pRows);
     }
 
     if (picked.length > 0) {
@@ -953,13 +1005,42 @@ function buildMailText_(no, name, booths, cancelUrl) {
   return lines.join('\n');
 }
 
+/** キャンセルの確認ページ（「本当にキャンセルしますか？」） */
+function confirmCancelHtml_(no, name, booths, token) {
+  var url = getWebAppUrl_() + '?action=cancel&no=' + encodeURIComponent(no) + '&token=' + encodeURIComponent(token) + '&confirm=1';
+  var list = '';
+  for (var i = 0; i < booths.length; i++) {
+    list += '<li style="margin:4px 0;">' + esc_(booths[i].name) + (booths[i].time ? '　<span style="color:#666;font-size:15px;">' + esc_(booths[i].time) + '</span>' : '') + '</li>';
+  }
+  return pageShell_('予約のキャンセル',
+    '<h1 style="font-size:22px;margin:0 0 14px;color:#2F6B5A;">本当にキャンセルしますか？</h1>' +
+    '<p style="font-size:17px;margin:0 0 6px;">予約番号　<strong>' + esc_(no) + '</strong>　' + esc_(name) + ' 様</p>' +
+    (list ? '<ul style="font-size:17px;line-height:1.7;margin:0 0 16px;padding-left:22px;">' + list + '</ul>' : '') +
+    '<p style="font-size:16px;line-height:1.8;color:#555;margin:0 0 18px;">キャンセルすると枠がほかの方に回ります。もとに戻すには、もう一度予約が必要です。</p>' +
+    '<a href="' + url + '" style="display:block;text-align:center;background:#B3281E;color:#fff;font-size:18px;font-weight:bold;padding:16px;border-radius:14px;text-decoration:none;margin-bottom:12px;">キャンセルする</a>' +
+    '<a href="' + esc_(EVENT.siteUrl || 'https://yuidocoro-wq.github.io/kitanaka-festa-2026/') + '" style="display:block;text-align:center;background:#fff;color:#2F6B5A;border:2px solid #468977;font-size:18px;font-weight:bold;padding:14px;border-radius:14px;text-decoration:none;">やめる（予約はそのまま）</a>');
+}
+
+function pageShell_(title, inner) {
+  return '<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">' +
+    '<meta name="viewport" content="width=device-width,initial-scale=1">' +
+    '<title>' + esc_(title) + '｜' + esc_(EVENT.name) + '</title></head>' +
+    '<body style="margin:0;background:#F4F8F6;font-family:\'Hiragino Sans\',\'Yu Gothic\',sans-serif;color:#222;">' +
+    '<div style="max-width:560px;margin:0 auto;">' +
+    '<div style="background:#468977;color:#fff;padding:18px 22px;font-size:18px;font-weight:bold;">' + esc_(EVENT.name) + '</div>' +
+    '<div style="background:#FFFFFF;margin:22px;padding:26px 22px;border-radius:14px;border:2px solid #DDE7E2;">' + inner + '</div>' +
+    '<div style="margin:0 22px 30px;font-size:15px;line-height:1.9;color:#555;">' +
+    esc_(EVENT.organizer) + '<br>お問い合わせ　' + esc_(EVENT.contact) +
+    '</div></div></body></html>';
+}
+
 function cancelHtml_(ok, no, msg) {
   return '<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">' +
     '<meta name="viewport" content="width=device-width,initial-scale=1">' +
     '<title>予約のキャンセル｜' + esc_(EVENT.name) + '</title></head>' +
-    '<body style="margin:0;background:#F4EFE4;font-family:\'Hiragino Sans\',\'Yu Gothic\',sans-serif;color:#33302B;">' +
+    '<body style="margin:0;background:#F4F8F6;font-family:\'Hiragino Sans\',\'Yu Gothic\',sans-serif;color:#222;">' +
     '<div style="max-width:560px;margin:0 auto;">' +
-    '<div style="background:#F2B705;padding:18px 22px;font-size:20px;font-weight:bold;">' + esc_(EVENT.name) + '</div>' +
+    '<div style="background:#468977;color:#fff;padding:18px 22px;font-size:18px;font-weight:bold;">' + esc_(EVENT.name) + '</div>' +
     '<div style="background:#FFFFFF;margin:22px;padding:26px 22px;border-radius:14px;">' +
     '<h1 style="font-size:22px;margin:0 0 16px;">' + (ok ? 'キャンセルの手続きが完了しました' : 'キャンセルできませんでした') + '</h1>' +
     (no ? '<p style="font-size:18px;margin:0 0 12px;">予約番号　<strong>' + esc_(no) + '</strong></p>' : '') +
