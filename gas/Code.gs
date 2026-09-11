@@ -68,8 +68,9 @@ var R_NO = 1, R_TS = 2, R_NAME = 3, R_KANA = 4, R_PHONE = 5, R_MAIL = 6,
 var R_COLS = 17;
 
 var D_NO = 1, D_BID = 2, D_BNAME = 3, D_TIME = 4, D_STATUS = 5;
-var D_COLS = 6;
-var D_PEOPLE = 6;                       // 人数（この明細が何人分か。組で数えるレースは1）
+var D_COLS = 7;
+var D_PEOPLE = 6;
+var D_WHO = 7;                          // 受ける人（名前・複数は「・」区切り）                       // 人数（この明細が何人分か。組で数えるレースは1）
 var ST_DONE = '参加済み';               // ブース担当が体験を終えた印
 var GROUP_UNIT_IDS = ['haihai', 'yochiyochi'];   // 「組」で数えるブース（1予約=1組）
 
@@ -98,7 +99,7 @@ function setup() {
   shR.setColumnWidth(R_NAME, 140);
   shR.setColumnWidth(R_MAIL, 220);
   shR.setColumnWidth(R_BOOTHS, 260);
-  ensureSheet_(ss, SH_DETAIL, ['予約番号', 'ブースID', 'ブース名', '時間', '状態', '人数']);
+  ensureSheet_(ss, SH_DETAIL, ['予約番号', 'ブースID', 'ブース名', '時間', '状態', '人数', '受ける人']);
   var booth = ensureSheet_(ss, SH_BOOTH, ['ブースID', 'ブース名', '時間', '予約枠', '受付中', '備考']);
   ensureSheet_(ss, SH_LOG, ['日時', '予約番号', '操作', 'メモ']);
   ensureSheet_(ss, SH_PEOPLE, ['予約番号', '名前', '生年月日', '区分', '体験を受ける', '状態', '照合キー（名前|生年月日）', '受ける体験']);
@@ -165,7 +166,7 @@ function buildBoothView_(ss) {
       "ARRAYFORMULA(IFERROR(VLOOKUP(" + D + "!A2:A," + R + "!A:C,3,FALSE),\"\"))," +
       D + "!F2:F," + D + "!E2:E," +
       "ARRAYFORMULA(IFERROR(VLOOKUP(" + D + "!A2:A," + R + "!A:E,5,FALSE),\"\"))," +
-      "ARRAYFORMULA(IFERROR(VLOOKUP(" + D + "!A2:A&\"|\"&" + D + "!C2:C," + P + "!I:J,2,FALSE),\"\"))" +
+      D + "!G2:G" +
       "}," + D + "!B2:B=\"" + b.id + "\"," + D + "!E2:E<>\"" + ST_CANCEL + "\"),2,TRUE),\"（まだ予約はありません）\")";
     sh.getRange(row, 1).setFormula(f);
     row += Math.max(Number(b.capacity) || 0, 5) + 3;
@@ -173,13 +174,10 @@ function buildBoothView_(ss) {
   sh.setColumnWidth(1, 90); sh.setColumnWidth(2, 130); sh.setColumnWidth(3, 160); sh.setColumnWidth(4, 50);
   sh.setColumnWidth(5, 70); sh.setColumnWidth(6, 120); sh.setColumnWidth(7, 220);
   sh.setFrozenRows(1);
-  /* 参加者タブの I:J に「予約番号|ブース名 → 受ける人の名前」の対応表を作る（ブース別一覧の受ける人 用） */
   var shP = ss.getSheetByName(SH_PEOPLE);
-  if (shP) {
-    shP.getRange('I1:J1').setValues([['（自動）番号|体験', '（自動）受ける人']]).setFontWeight('bold');
-    shP.getRange('I2').setFormula("=IFERROR(ARRAYFORMULA(IF(A2:A=\"\",,A2:A&\"|\"&H2:H)),\"\")");
-    shP.getRange('J2').setFormula("=IFERROR(ARRAYFORMULA(IF(A2:A=\"\",,B2:B)),\"\")");
-  }
+  if (shP) { shP.getRange('H1').setValue('受ける体験'); shP.getRange('I1:J2').clearContent(); }
+  var shD0 = ss.getSheetByName(SH_DETAIL);
+  if (shD0) shD0.getRange('G1').setValue('受ける人').setFontWeight('bold');
 }
 
 function rebuildSummary() {
@@ -476,7 +474,10 @@ function apiReserve_(d) {
     var shD = ss.getSheetByName(SH_DETAIL);
     var dRows = [];
     for (i = 0; i < picked.length; i++) {
-      dRows.push([no, picked[i].id, picked[i].name, picked[i].time, ST_RESERVED, picked[i].need || 1]);
+      var whoNames = [];
+      for (var wi = 0; wi < people.length; wi++) { if ((people[wi].booths || []).indexOf(picked[i].id) >= 0) whoNames.push(people[wi].name); }
+      if (!whoNames.length) whoNames.push(name);
+      dRows.push([no, picked[i].id, picked[i].name, picked[i].time, ST_RESERVED, picked[i].need || 1, whoNames.join('・')]);
     }
     shD.getRange(shD.getLastRow() + 1, 1, dRows.length, D_COLS).setValues(dRows);
     var shP = ss.getSheetByName(SH_PEOPLE);
@@ -647,7 +648,7 @@ function apiWalkin_(d) {
     if (picked.length > 0) {
       var shD = ss.getSheetByName(SH_DETAIL);
       var dRows = [];
-      for (i = 0; i < picked.length; i++) dRows.push([no, picked[i].id, picked[i].name, picked[i].time, ST_CAME, 1]);
+      for (i = 0; i < picked.length; i++) dRows.push([no, picked[i].id, picked[i].name, picked[i].time, ST_CAME, 1, name]);
       shD.getRange(shD.getLastRow() + 1, 1, dRows.length, D_COLS).setValues(dRows);
     }
     addLog_(ss, no, 'walkin', trim_(d.memo, 200));
