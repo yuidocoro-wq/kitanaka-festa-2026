@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>北中城村ウェルネススポーツフェスタ2026｜体験の予約</title>
+<meta name="description" content="2026年12月13日（日）北中城村中央公民館ホール。入場・体験は無料です。気になるブースの体験をこのページから予約できます。">
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700&family=M+PLUS+1p:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="site-head">
+  <div class="site-head-inner">
+    <a class="wordmark" href="index.html"><span class="wm-small">北中城村</span><span class="wm-main">ウェルネススポーツフェスタ2026</span><span class="wm-sub">体験のよやく</span></a>
+    <nav class="gnav" aria-label="メニュー">
+      <a href="index.html#hall"><svg viewBox="0 0 24 24"><rect x="3" y="9" width="18" height="10" rx="2"/><path d="M7 9V6h10v3M9 19v2M15 19v2"/></svg>ホールイベント</a>
+      <a href="index.html#booths"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4M9 15l2 2 4-4"/></svg>ブース予約</a>
+      <a href="index.html#exhibitors"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20c0-3.5 2.5-6 6-6s6 2.5 6 6M15 20c0-2.5 1.5-4.5 4-4.5s3 1.5 3 4.5"/></svg>しゅってんしゃ</a>
+      <a href="index.html#access"><svg viewBox="0 0 24 24"><path d="M12 21s-6-5.5-6-11a6 6 0 0 1 12 0c0 5.5-6 11-6 11z"/><circle cx="12" cy="10" r="2.2"/></svg>アクセス</a>
+    </nav>
+  </div>
+</header>
+
+<div class="crumb"><div class="wrap"><a href="index.html">ホーム</a><span>›</span>よやく</div></div>
+<div class="top">
+  <div class="wrap">
+    <h1>体験のよやく</h1>
+    <p class="date" id="hero-date"></p>
+    <p><span class="free" id="hero-free"></span></p>
+    <nav class="bigmenu" aria-label="見たいところをえらぶ">
+      <a class="big" href="#hall"><svg viewBox="0 0 24 24"><rect x="3" y="9" width="18" height="10" rx="2"/><path d="M7 9V6h10v3M9 19v2M15 19v2"/></svg><span class="kana">ホールイベント</span><span class="sub">レース・運動あそび・チェア体操</span></a>
+      <a class="big" href="#booths"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4M9 15l2 2 4-4"/></svg><span class="kana">ブース予約</span><span class="sub">足もみ・整体・コンディショニング</span></a>
+      <a class="big" href="#exhibitors"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20c0-3.5 2.5-6 6-6s6 2.5 6 6M15 20c0-2.5 1.5-4.5 4-4.5s3 1.5 3 4.5"/></svg><span class="kana">しゅってんしゃ</span><span class="sub">出展するみなさんの紹介</span></a>
+      <a class="big" href="#access"><svg viewBox="0 0 24 24"><path d="M12 21s-6-5.5-6-11a6 6 0 0 1 12 0c0 5.5-6 11-6 11z"/><circle cx="12" cy="10" r="2.2"/></svg><span class="kana">アクセス</span><span class="sub">会場・駐車場・地図</span></a>
+    </nav>
+    <p class="lead">気になるブースは、このページから予約できます。<br>予約がなくても、当日そのまま来ていただけます。</p>
+  </div>
+</div>
+
+<main>
+
+  <!-- ① イベント情報 -->
+  <section id="info">
+    <div class="wrap">
+      <h2><span class="bar"></span>イベントのご案内</h2>
+      <div class="card">
+        <ul class="info-list" id="info-list"></ul>
+      </div>
+      <p class="muted">お子さん連れでも、おじいちゃん・おばあちゃんでも、ゆっくり過ごしていただけるようにしています。</p>
+    </div>
+  </section>
+
+  <!-- ② ホールイベント（動くゾーンB） -->
+  <section id="hall">
+    <div class="wrap">
+      <h2><span class="bar"></span>ホールイベント</h2>
+      <p class="muted">舞台とホールで、みんなで体を動かします。予約がいるものと、そのまま参加できるものがあります。</p>
+      <div id="hall-list"></div>
+    </div>
+  </section>
+
+  <!-- ② ブース予約（ケアブースC） -->
+  <section id="booths">
+    <div class="wrap">
+      <h2><span class="bar"></span>ブース予約</h2>
+      <p class="muted" id="status-note">残りの枠を読み込んでいます…</p>
+      <div id="care-list"></div>
+    </div>
+  </section>
+
+  <!-- ③ 出展者紹介 -->
+  <section id="exhibitors">
+    <div class="wrap">
+      <h2><span class="bar"></span>出展するみなさん</h2>
+      <p class="muted">村内・近隣で活動している方々です。当日は気軽に声をかけてみてください。</p>
+      <div id="exhibitor-list"></div>
+    </div>
+  </section>
+
+  <!-- ④ アクセス -->
+  <section id="access">
+    <div class="wrap">
+      <h2><span class="bar"></span>会場とアクセス</h2>
+      <div class="card">
+        <ul class="info-list" id="access-list"></ul>
+        <a class="btn btn-sub" id="map-link" href="#" target="_blank" rel="noopener">Googleマップで開く</a>
+        <p class="small" id="map-url-text"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ⑤ 問い合わせ -->
+  <section id="contact">
+    <div class="wrap">
+      <h2><span class="bar"></span>お問い合わせ</h2>
+      <div class="card">
+        <p id="contact-line"></p>
+        <a class="btn btn-line" id="tel-link" href="#">電話をかける</a>
+        <p class="small">予約の変更・キャンセルも、こちらへご連絡ください。</p>
+      </div>
+      <p class="small">体験は無料です。当日、無理な営業・勧誘はしません。安心してお越しください。</p>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-foot">
+  <div class="wrap">
+    <p class="note" id="foot-organizer"></p>
+    <p class="note">当日の受付の方はこちら → <a href="checkin.html">受付用ページ</a></p>
+    <p class="note" id="last-no"></p>
+  </div>
+</footer>
+
+<!-- 出展者モーダル -->
+<div class="modal-back" id="modal-back" hidden>
+  <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div id="modal-body"></div>
+    <button type="button" class="btn btn-quiet" id="modal-close">閉じる</button>
+  </div>
+</div>
+
+<script src="config.js"></script>
+<script src="booths.js"></script>
+<script src="app.js"></script>
+<script>
+(function () {
+  "use strict";
+  var F = window.Festa, E = F.DATA.event, esc = F.esc;
+
+  F.showDemoBar("テスト表示中です（受付係がまだつながっていないため、予約は保存されません）");
+
+  /* ---------- ヒーロー ---------- */
+  F.$("#hero-date").textContent = E.dateLabel + "　" + E.time;
+  F.$("#hero-free").textContent = E.fee;
+
+  /* ---------- ① イベント情報 ---------- */
+  function rows(el, list) {
+    el.innerHTML = list.map(function (r) {
+      return '<li><span class="k">' + esc(r[0]) + '</span><span class="v">' + r[1] + "</span></li>";
+    }).join("");
+  }
+  rows(F.$("#info-list"), [
+    ["日にち", esc(E.dateLabel)],
+    ["時間", esc(E.time)],
+    ["会場", esc(E.venue)],
+    ["参加費", esc(E.fee)],
+    ["駐車場", esc(E.parking)],
+    ["主催", esc(E.organizer)]
+  ]);
+
+  /* ---------- ② ブース一覧 ---------- */
+  
+
+  function boothCard(b) {
+    var ex = F.exhibitor(b.exhibitor);
+    var prov = F.provisionalNote(b);
+    var h = [];
+    h.push('<article class="booth' + (b.reserve ? "" : " is-free") + '" id="booth-' + esc(b.id) + '">');
+    h.push("<h3>" + esc(b.name) + (prov ? '<span class="tag-provisional">' + esc(prov) + "</span>" : "") + "</h3>");
+    h.push('<p class="zone">' + esc(b.zone) + "</p>");
+    if (b.reserve) {
+      h.push('<p class="remain" data-remain="' + esc(b.id) + '" hidden></p>');
+    } else {
+      h.push('<p class="remain ok">予約なしで参加できます</p>');
+    }
+    h.push("<dl>");
+    h.push("<div><dt>時間</dt><dd>" + esc(F.timeText(b)) + "</dd></div>");
+    h.push("<div><dt>対象</dt><dd>" + esc(b.target) + "</dd></div>");
+    if (b.reserve) {
+      h.push("<div><dt>予約枠</dt><dd>" + esc(b.capacity) + esc(b.unit) + "</dd></div>");
+    }
+    if (b.slots) {
+      h.push("<div><dt>えらべる枠</dt><dd>" + b.slots.map(function (sid) {
+        var sb = F.booth(sid); return sb ? esc(sb.short) + "（" + esc(String(sb.capacity)) + "名）" : "";
+      }).join("／") + "</dd></div>");
+    }
+    if (ex) {
+      h.push("<div><dt>出展</dt><dd>" + esc(ex.name) + "</dd></div>");
+    }
+    h.push("</dl>");
+    h.push('<p class="desc">' + esc(b.desc) + "</p>");
+    if (b.caution) {
+      h.push('<p class="caution">ご注意：' + esc(b.caution) + "</p>");
+    }
+    if (b.meet) {
+      h.push('<p class="small">集合：' + esc(b.meet) + "</p>");
+    }
+    h.push('<div class="btn-row">');
+    if (b.reserve) {
+      h.push('<a class="btn btn-main" href="reserve.html?booth=' + encodeURIComponent(b.id) + '">' + (b.slots ? "時間をえらんで予約する" : "このブースを予約する") + '</a>');
+    }
+    if (ex) {
+      h.push('<button type="button" class="btn btn-sub" data-ex="' + esc(b.exhibitor) + '">出展者を見る</button>');
+    }
+    h.push("</div>");
+    h.push("</article>");
+    return h.join("");
+  }
+
+  var cards = F.DATA.booths.filter(function (b) { return !b.group; });
+  F.$("#hall-list").innerHTML = cards.filter(function (b) { return b.zone.charAt(0) === "B"; }).map(boothCard).join("");
+  F.$("#care-list").innerHTML = cards.filter(function (b) { return b.zone.charAt(0) === "C"; }).map(boothCard).join("");
+
+  /* 残り枠を受付係にきく */
+  function paintRemain(map) {
+    F.$$("[data-remain]").forEach(function (el) {
+      var id = el.getAttribute("data-remain");
+      var s = map[id], b0 = F.booth(id);
+      if (b0 && b0.slots) {
+        var sum = 0, any = false;
+        b0.slots.forEach(function (sid) { if (map[sid] && typeof map[sid].remaining === "number") { sum += map[sid].remaining; any = true; } });
+        if (!any) return;
+        s = { remaining: sum };
+      }
+      if (!s || typeof s.remaining !== "number") return;
+      el.hidden = false;
+      if (s.remaining <= 0) {
+        el.className = "remain full";
+        el.textContent = "満席（当日枠あり）";
+      } else if (s.remaining <= 2) {
+        el.className = "remain few";
+        el.textContent = "残り" + s.remaining + "枠";
+      } else {
+        el.className = "remain ok";
+        el.textContent = "残り" + s.remaining + "枠";
+      }
+    });
+  }
+
+  var note = F.$("#status-note");
+  if (F.isDemo()) {
+    note.textContent = "いまはテスト表示のため、残りの枠は出していません。";
+  } else {
+    F.fetchStatus().then(function (map) {
+      paintRemain(map);
+      note.textContent = "残りの枠は、このページを開いた時点のものです。";
+    }).catch(function () {
+      /* 取れないときは残り枠を出さず、予約ボタンだけ出す */
+      note.textContent = "残りの枠はただいま表示できません。ご予約はそのまま進めていただけます。";
+    });
+  }
+
+  /* ---------- ③ 出展者紹介 ---------- */
+  function exLinks(ex) {
+    var h = [];
+    if (ex.instagram) h.push('<a class="btn btn-main" href="' + esc(ex.instagram) + '" target="_blank" rel="noopener">Instagramを見る</a>');
+    if (ex.line) h.push('<a class="btn btn-go" href="' + esc(ex.line) + '" target="_blank" rel="noopener">公式LINEを見る</a>');
+    if (ex.web) h.push('<a class="btn btn-sub" href="' + esc(ex.web) + '" target="_blank" rel="noopener">ホームページを見る</a>');
+    return h.join("");
+  }
+
+  function boothsOf(key) {
+    return F.DATA.booths.filter(function (b) { return b.exhibitor === key; })
+      .map(function (b) { return b.name; }).join("／");
+  }
+
+  var exOrder = [];
+  F.DATA.booths.forEach(function (b) {
+    if (b.exhibitor && exOrder.indexOf(b.exhibitor) < 0) exOrder.push(b.exhibitor);
+  });
+  Object.keys(F.DATA.exhibitors).forEach(function (k) {
+    if (exOrder.indexOf(k) < 0) exOrder.push(k);
+  });
+
+  F.$("#exhibitor-list").innerHTML = exOrder.map(function (key) {
+    var ex = F.exhibitor(key);
+    if (!ex) return "";
+    var bs = boothsOf(key);
+    return '<article class="exhibitor">' +
+      "<h3>" + esc(ex.name) + "</h3>" +
+      '<p class="people">' + esc(ex.people) + "</p>" +
+      '<p class="tag">' + esc(ex.tag) + "</p>" +
+      (bs ? '<p class="booths-of">担当：' + esc(bs) + "</p>" : "") +
+      '<p class="intro">' + esc(ex.intro) + "</p>" +
+      exLinks(ex) +
+      "</article>";
+  }).join("");
+
+  /* ---------- 出展者モーダル ---------- */
+  var back = F.$("#modal-back"), body = F.$("#modal-body");
+  function openEx(key) {
+    var ex = F.exhibitor(key);
+    if (!ex) return;
+    var bs = boothsOf(key);
+    body.innerHTML =
+      '<h3 id="modal-title">' + esc(ex.name) + "</h3>" +
+      '<p class="people">' + esc(ex.people) + "</p>" +
+      '<p class="tag">' + esc(ex.tag) + "</p>" +
+      (bs ? '<p class="booths-of">担当：' + esc(bs) + "</p>" : "") +
+      '<p class="intro">' + esc(ex.intro) + "</p>" +
+      exLinks(ex);
+    back.hidden = false;
+    document.body.style.overflow = "hidden";
+  }
+  function closeEx() {
+    back.hidden = true;
+    document.body.style.overflow = "";
+  }
+  document.addEventListener("click", function (e) {
+    var btn = e.target.closest ? e.target.closest("[data-ex]") : null;
+    if (btn) { openEx(btn.getAttribute("data-ex")); return; }
+    if (e.target === back) closeEx();
+  });
+  F.$("#modal-close").addEventListener("click", closeEx);
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeEx(); });
+
+  /* ---------- ④ アクセス ---------- */
+  rows(F.$("#access-list"), [
+    ["会場", esc(E.venue)],
+    ["住所", esc(E.address)],
+    ["駐車場", esc(E.parking)]
+  ]);
+  F.$("#map-link").href = F.mapUrl();
+  F.$("#map-url-text").textContent = "地図のURL：" + F.mapUrlText();
+
+  /* ---------- ⑤ 問い合わせ ---------- */
+  F.$("#contact-line").textContent = "このイベントのお問い合わせ先：" + E.contact;
+  var tel = (E.contact.match(/[0-9][0-9\-]{8,}/) || [""])[0];
+  if (tel) {
+    F.$("#tel-link").href = "tel:" + tel.replace(/-/g, "");
+    F.$("#tel-link").textContent = "電話をかける（" + tel + "）";
+  } else {
+    F.$("#tel-link").hidden = true;
+  }
+
+  F.$("#foot-organizer").textContent = E.organizer;
+
+  var last = F.loadLastNo();
+  if (last) F.$("#last-no").textContent = "前回の予約番号：" + last;
+})();
+</script>
+</body>
+</html>
