@@ -130,7 +130,7 @@
         <ol class="steps">
           <li>会場に着いたら、まず受付にお越しください。</li>
           <li>受付で、この予約番号（またはメールのQR）をお見せください。</li>
-          <li>ブースの時間になったら、係の者がご案内します。</li>
+          <li id="step-meet">時間になったら、ご自分でブースへお集まりください（係の者は呼びに行きません）。</li>
         </ol>
       </div>
 
@@ -138,7 +138,8 @@
         <p class="small" id="t-map-text"></p>
         <a class="btn btn-sub" id="t-map" href="#" target="_blank" rel="noopener">会場の地図を開く</a>
         <a class="btn btn-quiet" href="index.html">ほかのブースを見る</a>
-        <p class="small">変更・キャンセルは、お電話でご連絡ください（<span id="t-contact"></span>）。</p>
+        <p class="small">キャンセルは、確認メールの「予約をキャンセルする」を押してください。「本当にキャンセルしますか？」→「キャンセルする」で完了します（お電話はいりません）。内容を変えたいときは、いちどキャンセルしてから予約し直してください。</p>
+        <p class="small">わからないことは <span id="t-contact"></span> まで。</p>
       </div>
     </section>
 
@@ -514,7 +515,14 @@
     F.$("#t-name").textContent = name + " 様" + (people.length > 1 ? "（ほか" + (people.length - 1) + "名）" : "");
     var meets = [];
     booths.forEach(function (b) { var fb = F.booth(b.id); var g = fb && fb.group ? F.booth(fb.group) : null; var m = (fb && fb.meet) || (g && g.meet); if (m && meets.indexOf(m) < 0) meets.push(m); });
-    F.$("#t-meet").textContent = meets.join("／") || "係の者がご案内します";
+    F.$("#t-meet").textContent = meets.join("／") || "開始5分前にブースへお集まりください";
+    /* 当日の流れ③：体験ごとの集合のきまり（係の者は呼びに行かない） */
+    var lines = booths.map(function (b) {
+      var fb = F.booth(b.id); var g = fb && fb.group ? F.booth(fb.group) : null;
+      var m = (fb && fb.meet) || (g && g.meet) || "開始5分前にブースへお越しください";
+      return "「" + esc(b.name || (fb ? fb.name : b.id)) + "」…" + esc(m.split("。")[0]);
+    });
+    F.$("#step-meet").innerHTML = "係の者は呼びに行きません。時間になったら、ご自分でお集まりください。<br>" + lines.join("<br>") + "<br><span class='small'>時間までに来られない場合は、当日枠の方にお譲りします。</span>";
     F.$("#t-date").textContent = E.dateLabel + "　" + E.time;
     F.$("#t-venue").textContent = E.venue;
     F.$("#t-booths").innerHTML = booths.map(function (b) {
