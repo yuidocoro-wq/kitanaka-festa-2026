@@ -41,6 +41,8 @@
         <label class="check" style="margin-top:8px;"><input type="checkbox" id="auto-checkin" checked><span class="t"><b>QRを読んだら、そのまま「来場」にする</b><span>外すと、名前を見てから「来場にする」を押す形になります</span></span></label>
         <div id="reader-box" hidden>
           <video id="video" playsinline muted></video>
+          <div class="reader-guide"></div>
+          <p class="reader-hint">QRを枠の中に大きく映してください（画面のQRでもOK）</p>
         </div>
         <canvas id="canvas" hidden></canvas>
 
@@ -204,16 +206,21 @@
     var img = new Image();
     var url = URL.createObjectURL(f);
     img.onload = function () {
-      var max = 1200, sc = Math.min(1, max / Math.max(img.width, img.height));
-      canvas.width = Math.round(img.width * sc); canvas.height = Math.round(img.height * sc);
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      var d = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      var code = (typeof jsQR === "function") ? jsQR(d.data, d.width, d.height, { inversionAttempts: "attemptBoth" }) : null;
+      var code = null, sizes = [1600, 1000, 640, 2200];
+      for (var si = 0; si < sizes.length && !code; si++) {
+        var sc = Math.min(1, sizes[si] / Math.max(img.width, img.height));
+        canvas.width = Math.round(img.width * sc); canvas.height = Math.round(img.height * sc);
+        ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        var d = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        code = (typeof jsQR === "function") ? jsQR(d.data, d.width, d.height, { inversionAttempts: "attemptBoth" }) : null;
+      }
       URL.revokeObjectURL(url);
       var no = code && code.data ? pickNo(code.data) : "";
       if (no) { F.$("#no").value = no; lookup(no, F.$("#auto-checkin").checked); }
       else box(F.$("#desk-msg"), "err", "QRが読み取れませんでした。QRを大きく、明るく写してもう一度お試しください。");
     };
+    img.onerror = function () { URL.revokeObjectURL(url); box(F.$("#desk-msg"), "err", "この写真の形式は読めませんでした。番号の手入力をお使いください。"); };
     img.src = url;
     this.value = "";
   });
@@ -221,11 +228,12 @@
   function tick() {
     if (!scanning) return;
     if (video.readyState === video.HAVE_ENOUGH_DATA) {
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
+      var vw = video.videoWidth, vh = video.videoHeight, sc = Math.min(1, 800 / Math.max(vw, vh));
+      canvas.width = Math.round(vw * sc);
+      canvas.height = Math.round(vh * sc);
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
       var img = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      var code = jsQR(img.data, img.width, img.height, { inversionAttempts: "dontInvert" });
+      var code = jsQR(img.data, img.width, img.height, { inversionAttempts: "attemptBoth" });
       if (code && code.data) {
         var no = pickNo(code.data);
         if (no) {
