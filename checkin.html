@@ -37,6 +37,7 @@
           <button type="button" class="btn btn-main" id="scan-btn">QRを読む</button>
           <button type="button" class="btn btn-line" id="scan-stop" hidden>カメラを止める</button>
         </div>
+        <label class="btn btn-line" style="margin-top:8px;">写真でQRを読む（カメラが動かないとき）<input type="file" id="photo-qr" accept="image/*" capture="environment" hidden></label>
         <label class="check" style="margin-top:8px;"><input type="checkbox" id="auto-checkin" checked><span class="t"><b>QRを読んだら、そのまま「来場」にする</b><span>外すと、名前を見てから「来場にする」を押す形になります</span></span></label>
         <div id="reader-box" hidden>
           <video id="video" playsinline muted></video>
@@ -164,24 +165,58 @@
       return;
     }
     F.$("#desk-msg").innerHTML = "";
-    navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false })
+    var ua = navigator.userAgent || "";
+    if (/Line\/|Instagram|FBAN|FBAV|Twitter|GSA\//.test(ua)) {
+      box(F.$("#desk-msg"), "err", "LINEなどアプリの中のブラウザではカメラが使えません。右上や下のメニューから「Safariで開く」（Androidは「Chromeで開く」）にしてください。または下の「写真でQRを読む」をお使いください。");
+      return;
+    }
+    F.$("#reader-box").hidden = false;
+    video.setAttribute("playsinline", "true");
+    video.setAttribute("autoplay", "true");
+    video.muted = true;
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" } }, audio: false })
       .then(function (s) {
         stream = s;
         video.srcObject = s;
-        video.setAttribute("playsinline", "true");
-        return video.play();
+        var pr = video.play();
+        return (pr && pr.then) ? pr : Promise.resolve();
       })
       .then(function () {
-        F.$("#reader-box").hidden = false;
         F.$("#scan-stop").hidden = false;
         F.$("#scan-btn").hidden = true;
         scanning = true;
         tick();
       })
-      .catch(function () {
-        box(F.$("#desk-msg"), "err", "カメラを使う許可が必要です。ブラウザの許可をオンにするか、番号の手入力をお使いください。");
+      .catch(function (err) {
+        F.$("#reader-box").hidden = true;
+        var n = (err && err.name) || "";
+        var msg = "カメラが使えませんでした。";
+        if (n === "NotAllowedError" || n === "SecurityError") msg = "カメラの許可が「許可しない」になっています。iPhoneは 設定→Safari→カメラ を「確認」か「許可」に、画面上部の「ぁあ」→Webサイトの設定 からも変えられます。";
+        else if (n === "NotFoundError" || n === "OverconstrainedError") msg = "使えるカメラが見つかりませんでした。";
+        else if (n === "NotReadableError") msg = "ほかのアプリがカメラを使っています。いちど閉じてからお試しください。";
+        box(F.$("#desk-msg"), "err", msg + "（" + n + "）下の「写真でQRを読む」か、番号の手入力もお使いいただけます。");
       });
   }
+
+  /* 写真でQRを読む（カメラが起動しないときの逃げ道。アプリ内ブラウザでも動く） */
+  F.$("#photo-qr").addEventListener("change", function () {
+    var f = this.files && this.files[0]; if (!f) return;
+    var img = new Image();
+    var url = URL.createObjectURL(f);
+    img.onload = function () {
+      var max = 1200, sc = Math.min(1, max / Math.max(img.width, img.height));
+      canvas.width = Math.round(img.width * sc); canvas.height = Math.round(img.height * sc);
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      var d = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      var code = (typeof jsQR === "function") ? jsQR(d.data, d.width, d.height, { inversionAttempts: "attemptBoth" }) : null;
+      URL.revokeObjectURL(url);
+      var no = code && code.data ? pickNo(code.data) : "";
+      if (no) { F.$("#no").value = no; lookup(no, F.$("#auto-checkin").checked); }
+      else box(F.$("#desk-msg"), "err", "QRが読み取れませんでした。QRを大きく、明るく写してもう一度お試しください。");
+    };
+    img.src = url;
+    this.value = "";
+  });
 
   function tick() {
     if (!scanning) return;
