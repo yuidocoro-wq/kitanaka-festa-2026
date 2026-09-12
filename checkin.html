@@ -37,6 +37,7 @@
           <button type="button" class="btn btn-main" id="scan-btn">QRを読む</button>
           <button type="button" class="btn btn-line" id="scan-stop" hidden>カメラを止める</button>
         </div>
+        <label class="check" style="margin-top:8px;"><input type="checkbox" id="auto-checkin" checked><span class="t"><b>QRを読んだら、そのまま「来場」にする</b><span>外すと、名前を見てから「来場にする」を押す形になります</span></span></label>
         <div id="reader-box" hidden>
           <video id="video" playsinline muted></video>
         </div>
@@ -195,7 +196,7 @@
         if (no) {
           stopScan();
           F.$("#no").value = no;
-          lookup(no);
+          lookup(no, F.$("#auto-checkin").checked);
           return;
         }
       }
@@ -223,7 +224,7 @@
     return "KF-" + n;
   }
 
-  function lookup(raw) {
+  function lookup(raw, autoCheckin) {
     var no = normalizeNo(raw);
     if (!no) { box(F.$("#desk-msg"), "err", "番号を入れてください。"); return; }
     F.$("#desk-msg").innerHTML = '<p class="muted">調べています…</p>';
@@ -243,7 +244,16 @@
 
     F.getGas({ action: "lookup", no: no, pin: PIN }).then(function (j) {
       F.$("#desk-msg").innerHTML = "";
-      if (j && j.ok === true) showPerson(j);
+      if (j && j.ok === true) {
+        showPerson(j);
+        /* QRを読んだときは、そのまま「来場」にする（すでに来場ずみなら何もしない） */
+        if (autoCheckin && !j.checkedIn) {
+          var b1 = F.$("#r-actions button");
+          if (b1) { b1.click(); box(F.$("#desk-msg"), "ok", "QRを読み取りました。来場にします。"); }
+        } else if (autoCheckin && j.checkedIn) {
+          box(F.$("#desk-msg"), "info", "この方はすでに来場ずみです。");
+        }
+      }
       else box(F.$("#desk-msg"), "err", F.friendlyError(j && j.error));
     }).catch(function () {
       box(F.$("#desk-msg"), "err", F.friendlyError("network"));
