@@ -130,7 +130,7 @@
         <ol class="steps">
           <li>会場に着いたら、まず受付にお越しください。</li>
           <li>受付で、この予約番号（またはメールのQR）をお見せください。</li>
-          <li id="step-meet">時間になったら、ご自分でブースへお集まりください（係の者は呼びに行きません）。</li>
+          <li id="step-meet">時間になったら、ブースへお集まりください。</li>
         </ol>
       </div>
 
@@ -522,7 +522,7 @@
       var m = (fb && fb.meet) || (g && g.meet) || "開始5分前にブースへお越しください";
       return "「" + esc(b.name || (fb ? fb.name : b.id)) + "」…" + esc(m.split("。")[0]);
     });
-    F.$("#step-meet").innerHTML = "係の者は呼びに行きません。時間になったら、ご自分でお集まりください。<br>" + lines.join("<br>") + "<br><span class='small'>時間までに来られない場合は、当日枠の方にお譲りします。</span>";
+    F.$("#step-meet").innerHTML = "時間になったら、ブースへお集まりください。<br>" + lines.join("<br>") + "<br><span class='small'>時間までに来られない場合は、当日枠の方にお譲りします。</span>";
     F.$("#t-date").textContent = E.dateLabel + "　" + E.time;
     F.$("#t-venue").textContent = E.venue;
     F.$("#t-booths").innerHTML = booths.map(function (b) {
