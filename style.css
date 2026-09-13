@@ -635,3 +635,76 @@ input:focus, select:focus, textarea:focus{ outline-color:var(--green); border-co
 #reader-box{ position:relative; }
 .reader-guide{ position:absolute; left:50%; top:50%; width:60%; aspect-ratio:1/1; transform:translate(-50%,-50%); border:4px solid rgba(255,221,114,.95); border-radius:14px; pointer-events:none; box-shadow:0 0 0 2000px rgba(0,0,0,.25); }
 .reader-hint{ position:absolute; left:0; right:0; bottom:8px; margin:0; text-align:center; color:#fff; font-size:15px; text-shadow:0 1px 3px #000; }
+
+/* ══ 金継ぎ追補スタイル v4（2026-09-13・4巡目＝大ボタン説明の balance を外し文節折りを優先）北中城フェスタ2026 予約サイト ══
+   2026-09-13 なつきさん承認で本体に反映（元は docs/kintsugi/kintsugi-repair.css）。
+   直した根: ①読めない薄さの緑（比4.11→床4.5超） ②文字サイズの役割内の割れ ③似て非なる色（白に近い薄緑4種→1種）
+            ④角丸6種→3種 ⑤語の途中で折れる（ナビ・大ボタン・本文の文節折り） */
+
+/* ① 緑を1本に。文字にも線にも使える深さ（白地で比 6.3） */
+:root{ --green:#2F6B5A; --green-deep:#2F6B5A; --blue:#2F6B5A; --blue-deep:#2F6B5A; --yellow:#2F6B5A; --yellow-dark:#2F6B5A;
+       --line:#D9E8E0; --tint:#D9E8E0; }  /* 線と下敷きを同じ薄緑1色に＝色の数を増やさない */
+.wordmark{ color:var(--green-deep); }
+.gnav a{ color:var(--green-deep); }
+.stepno{ background:var(--green-deep); }
+
+/* ③ 白に近い薄緑（#EAF3EF・#F4F8F6）を1つの --tint に。役割は「面の下敷き」で同じ */
+#hero-date, .remain.ok, .gnav a:hover, .gnav a:focus, .big:active, .big:hover, .splash,
+.crumb, footer.site-foot, .p-booths, #booth-chair { background:var(--tint); }
+.remain.ok{ border-color:var(--green-deep); color:var(--green-deep); }
+/* 注意書き（足もみの禁忌）は役割色＝橙の下敷きを残し、白との差だけ広げる */
+.booth .caution, #booth-ashimomi > p.caution{ background:#FFE9C2; }
+/* 「仮」タグ・任意タグ・予約なしブースの下敷きも同じ --tint に（灰を1色減らす） */
+.tag-provisional, span.opt, .opt{ background:var(--tint); }
+.booth.is-free{ background:var(--tint); border-color:var(--line); }
+
+/* ② 文字サイズ：役割の中で割れていた段を寄せる（大きさは保つ） */
+h3{ font-size:22px; }
+.booth .zone, .zone{ font-size:16px; }
+#hero-date{ font-size:19px; }
+.wordmark .wm-sub{ font-size:14px; }
+.small{ font-size:16px; }
+.free, #hero-free{ font-size:19px; }
+.big .sub{ font-size:14px; }
+.exhibitor .booths-of{ font-size:16px; }
+span.k, .booth .k{ font-size:16px; }
+#foot-organizer{ font-size:16px; }
+.big .kana{ font-size:22px; }
+@media (min-width:768px){ .big .kana{ font-size:22px; } .gnav a{ font-size:16px; } }
+.gnav a{ font-size:16px; }
+/* 予約フォーム：補足の段を 14（タグ・丸数字・小さな注記）と 16（ラベル・ヒント）の2つに */
+.field label, #field-people > label, .person .field label{ font-size:16px; }
+.field .hint, #field-people > p.hint, .hint{ font-size:16px; }
+.check .t b{ font-size:16px; }
+.check .t span{ font-size:14px; }
+.req, span.req, .opt, span.opt{ font-size:14px; }
+.stepno{ font-size:14px; }
+
+/* ④ 角丸を 小8・面14・丸999 の3種に */
+h2 .bar, .bar, span.bar{ border-radius:8px; }
+.opt, span.opt{ border-radius:8px; }
+.tag-provisional, .req, span.req{ border-radius:8px; }
+.gnav a{ border-radius:14px; }
+.big{ border-radius:14px; }
+.p-booths{ border-radius:14px; }
+
+/* ⑤ 語の途中で折れない：ナビと大ボタンの語は1行に。本文は文節で折る（対応ブラウザのみ・非対応は今のまま） */
+.gnav a{ white-space:nowrap; }
+@media (max-width:767px){
+  .gnav{ display:grid; grid-template-columns:1fr 1fr; gap:6px; overflow:visible; }
+  .gnav a{ min-width:0; min-height:52px; }
+}
+.big .kana{ white-space:nowrap; }
+@media (max-width:767px){
+  .big{ padding:14px 6px; }
+  .big .kana{ font-size:19px; letter-spacing:.03em; }
+}
+.big .sub, .booth .desc, .booth dd, .exhibitor .intro, .exhibitor .booths-of, .exhibitor .tag, .lead, .small, .muted, p{ word-break:auto-phrase; }
+h1,h2,h3{ text-wrap:balance; }
+#hero-date, .big .sub, .gnav a, .kana{ word-break:auto-phrase; }
+
+/* ── 本体反映のときに足した分（2026-09-13） ── */
+.hero-time{ display:inline-block; margin-left:.6em; }          /* 日付帯の時間はひとかたまりで折る */
+.slot-state.is-full{ color:var(--ink-soft); text-decoration:line-through; }
+.age-hint{ margin:4px 0 0; color:var(--green-deep); font-weight:700; }
+.checkin-body #pin{ width:100%; min-height:56px; padding:12px 14px; font-size:22px; letter-spacing:.2em; border:2px solid var(--line); border-radius:var(--radius); font-family:inherit; }

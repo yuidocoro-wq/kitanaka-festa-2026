@@ -15,13 +15,13 @@
     <nav class="gnav" aria-label="メニュー">
       <a href="index.html#hall"><svg viewBox="0 0 24 24"><rect x="3" y="9" width="18" height="10" rx="2"/><path d="M7 9V6h10v3M9 19v2M15 19v2"/></svg>ホールイベント</a>
       <a href="index.html#booths"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4M9 15l2 2 4-4"/></svg>ブース予約</a>
-      <a href="index.html#exhibitors"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20c0-3.5 2.5-6 6-6s6 2.5 6 6M15 20c0-2.5 1.5-4.5 4-4.5s3 1.5 3 4.5"/></svg>しゅってんしゃ</a>
+      <a href="index.html#exhibitors"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20c0-3.5 2.5-6 6-6s6 2.5 6 6M15 20c0-2.5 1.5-4.5 4-4.5s3 1.5 3 4.5"/></svg>出展者</a>
       <a href="index.html#access"><svg viewBox="0 0 24 24"><path d="M12 21s-6-5.5-6-11a6 6 0 0 1 12 0c0 5.5-6 11-6 11z"/><circle cx="12" cy="10" r="2.2"/></svg>アクセス</a>
     </nav>
   </div>
 </header>
 
-<div class="crumb no-print"><div class="wrap"><a href="index.html">ホーム</a><span>›</span><a href="index.html#booths">よやく</a><span>›</span>フォーム</div></div>
+<div class="crumb no-print"><div class="wrap"><a href="index.html">ホーム</a><span>›</span><a href="index.html#booths">予約</a><span>›</span>フォーム</div></div>
 <main>
   <div class="wrap">
 
@@ -61,8 +61,8 @@
 
         <div class="field" id="field-childage" hidden>
           <label for="f-childage">お子さんの月齢・年齢</label>
-          <p class="hint">例：10か月／1歳3か月</p>
-          <input type="text" id="f-childage" name="childAge">
+          <p class="hint">1歳以下のお子さんは、生年月日から開催日（12月13日）時点の月齢が自動で入ります。ちがうときは書き直してください。</p>
+          <input type="text" id="f-childage" name="childAge" data-auto="1">
         </div>
 
         <div class="field" id="field-other">
@@ -135,7 +135,6 @@
       </div>
 
       <div class="card no-print">
-        <p class="small" id="t-map-text"></p>
         <a class="btn btn-sub" id="t-map" href="#" target="_blank" rel="noopener">会場の地図を開く</a>
         <a class="btn btn-quiet" href="index.html">ほかのブースを見る</a>
         <p class="small">キャンセルは、確認メールの「予約をキャンセルする」を押してください。「本当にキャンセルしますか？」→「キャンセルする」で完了します（お電話はいりません）。内容を変えたいときは、いちどキャンセルしてから予約し直してください。</p>
@@ -295,6 +294,45 @@
       F.$$("#other-list input:checked, #other-panel input:checked").some(function (i) { return F.isRace(F.booth(i.value)); });
     childAgeField.hidden = !show;
   }
+
+  /* ---------- 生年月日 → 開催日時点の月齢（1歳以下のお子さんだけ・自動） ----------
+     基準日は開催日 E.date（2026-12-13・日本の暦日）。端末の時計や時差は使わず、年・月・日の整数だけで数える */
+  var EV = (function () { var m = String(E.date || "2026-12-13").match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/); return m ? { y: +m[1], m: +m[2], d: +m[3] } : { y: 2026, m: 12, d: 13 }; })();
+  function parseBirth(str) {
+    var t = String(str || "").replace(/[０-９]/g, function (c) { return String.fromCharCode(c.charCodeAt(0) - 0xFEE0); }).replace(/\s+/g, "");
+    var m = t.match(/^(\d{4})[\/\-.年](\d{1,2})[\/\-.月](\d{1,2})日?$/) || t.match(/^(\d{4})(\d{2})(\d{2})$/);
+    if (!m) return null;
+    var y = +m[1], mo = +m[2], d = +m[3];
+    if (mo < 1 || mo > 12 || d < 1 || d > 31) return null;
+    return { y: y, m: mo, d: d };
+  }
+  function monthsAtEvent(b) {
+    var n = (EV.y - b.y) * 12 + (EV.m - b.m);
+    if (EV.d < b.d) n -= 1;
+    return n;
+  }
+  function ageText(n) { return n < 12 ? n + "か月" : Math.floor(n / 12) + "歳" + (n % 12 ? (n % 12) + "か月" : ""); }
+  function refreshAges() {
+    var parts = [];
+    F.$$("[data-person]").forEach(function (row) {
+      var kind = row.querySelector(".p-kind").value, birthEl = row.querySelector(".p-birth");
+      var hint = row.querySelector(".age-hint");
+      var b = parseBirth(birthEl.value), n = b ? monthsAtEvent(b) : null;
+      var show = (kind === "子ども" && n !== null && n >= 0 && n < 24);
+      if (show) {
+        if (!hint) { hint = document.createElement("p"); hint.className = "small age-hint"; birthEl.parentNode.appendChild(hint); }
+        hint.textContent = "開催日（12月13日）には " + ageText(n);
+        var nm = row.querySelector(".p-name").value.trim();
+        parts.push((nm ? nm + " " : "") + ageText(n));
+      } else if (hint) { hint.remove(); }
+    });
+    var f = F.$("#f-childage");
+    if (f.getAttribute("data-auto") === "1") f.value = parts.join("／");
+  }
+  peopleEl.addEventListener("input", function (e) { if (e.target.matches(".p-birth, .p-name")) refreshAges(); });
+  peopleEl.addEventListener("change", function (e) { if (e.target.matches(".p-kind, .p-birth")) refreshAges(); });
+  F.$("#f-childage").addEventListener("input", function () { this.setAttribute("data-auto", this.value.trim() ? "0" : "1"); if (!this.value.trim()) refreshAges(); });
+  refreshAges();
 
   /* ---------- ほかのブースのチェックボックス ---------- */
   /* ---------- ほかにも予約（2段：体験のボタン → その時間） ---------- */
@@ -538,7 +576,6 @@
       : "確認メールをお送りしました。届かないときは、迷惑メールフォルダもご覧ください。";
 
     F.$("#t-map").href = F.mapUrl();
-    F.$("#t-map-text").textContent = "地図のURL：" + F.mapUrlText();
     F.$("#t-contact").textContent = E.contact;
 
     if (!demo) F.saveLastNo(no);

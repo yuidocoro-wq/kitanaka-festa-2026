@@ -12,26 +12,26 @@
 
 <header class="site-head">
   <div class="site-head-inner">
-    <a class="wordmark" href="index.html"><span class="wm-small">北中城村</span><span class="wm-main">ウェルネススポーツフェスタ2026</span><span class="wm-sub">体験のよやく</span></a>
+    <a class="wordmark" href="index.html"><span class="wm-small">北中城村</span><span class="wm-main">ウェルネススポーツフェスタ2026</span><span class="wm-sub">体験の予約</span></a>
     <nav class="gnav" aria-label="メニュー">
       <a href="index.html#hall"><svg viewBox="0 0 24 24"><rect x="3" y="9" width="18" height="10" rx="2"/><path d="M7 9V6h10v3M9 19v2M15 19v2"/></svg>ホールイベント</a>
       <a href="index.html#booths"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4M9 15l2 2 4-4"/></svg>ブース予約</a>
-      <a href="index.html#exhibitors"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20c0-3.5 2.5-6 6-6s6 2.5 6 6M15 20c0-2.5 1.5-4.5 4-4.5s3 1.5 3 4.5"/></svg>しゅってんしゃ</a>
+      <a href="index.html#exhibitors"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20c0-3.5 2.5-6 6-6s6 2.5 6 6M15 20c0-2.5 1.5-4.5 4-4.5s3 1.5 3 4.5"/></svg>出展者</a>
       <a href="index.html#access"><svg viewBox="0 0 24 24"><path d="M12 21s-6-5.5-6-11a6 6 0 0 1 12 0c0 5.5-6 11-6 11z"/><circle cx="12" cy="10" r="2.2"/></svg>アクセス</a>
     </nav>
   </div>
 </header>
 
-<div class="crumb"><div class="wrap"><a href="index.html">ホーム</a><span>›</span>よやく</div></div>
+<div class="crumb"><div class="wrap"><a href="index.html">ホーム</a><span>›</span>予約</div></div>
 <div class="top">
   <div class="wrap">
-    <h1>体験のよやく</h1>
+    <h1>体験の予約</h1>
     <p class="date" id="hero-date"></p>
     <p><span class="free" id="hero-free"></span></p>
     <nav class="bigmenu" aria-label="見たいところをえらぶ">
       <a class="big" href="#hall"><svg viewBox="0 0 24 24"><rect x="3" y="9" width="18" height="10" rx="2"/><path d="M7 9V6h10v3M9 19v2M15 19v2"/></svg><span class="kana">ホールイベント</span><span class="sub">レース・運動あそび・チェア体操</span></a>
       <a class="big" href="#booths"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4M9 15l2 2 4-4"/></svg><span class="kana">ブース予約</span><span class="sub">足もみ・整体・コンディショニング</span></a>
-      <a class="big" href="#exhibitors"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20c0-3.5 2.5-6 6-6s6 2.5 6 6M15 20c0-2.5 1.5-4.5 4-4.5s3 1.5 3 4.5"/></svg><span class="kana">しゅってんしゃ</span><span class="sub">出展するみなさんの紹介</span></a>
+      <a class="big" href="#exhibitors"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20c0-3.5 2.5-6 6-6s6 2.5 6 6M15 20c0-2.5 1.5-4.5 4-4.5s3 1.5 3 4.5"/></svg><span class="kana">出展者</span><span class="sub">出展するみなさんの紹介</span></a>
       <a class="big" href="#access"><svg viewBox="0 0 24 24"><path d="M12 21s-6-5.5-6-11a6 6 0 0 1 12 0c0 5.5-6 11-6 11z"/><circle cx="12" cy="10" r="2.2"/></svg><span class="kana">アクセス</span><span class="sub">会場・駐車場・地図</span></a>
     </nav>
     <p class="lead">気になるブースは、このページから予約できます。<br>予約がなくても、当日そのまま来ていただけます。</p>
@@ -85,7 +85,6 @@
       <div class="card">
         <ul class="info-list" id="access-list"></ul>
         <a class="btn btn-sub" id="map-link" href="#" target="_blank" rel="noopener">Googleマップで開く</a>
-        <p class="small" id="map-url-text"></p>
       </div>
     </div>
   </section>
@@ -108,7 +107,6 @@
 <footer class="site-foot">
   <div class="wrap">
     <p class="note" id="foot-organizer"></p>
-    <p class="note">当日の受付の方はこちら → <a href="checkin.html">受付用ページ</a></p>
     <p class="note" id="last-no"></p>
   </div>
 </footer>
@@ -132,7 +130,7 @@
   F.showDemoBar("テスト表示中です（受付係がまだつながっていないため、予約は保存されません）");
 
   /* ---------- ヒーロー ---------- */
-  F.$("#hero-date").textContent = E.dateLabel + "　" + E.time;
+  F.$("#hero-date").innerHTML = esc(E.dateLabel) + '<span class="hero-time">' + esc(E.time) + "</span>";
   F.$("#hero-free").textContent = E.fee;
 
   /* ---------- ① イベント情報 ---------- */
@@ -147,7 +145,7 @@
     ["会場", esc(E.venue)],
     ["参加費", esc(E.fee)],
     ["駐車場", esc(E.parking)],
-    ["主催", esc(E.organizer)]
+    ["主催・運営", esc(String(E.organizer).replace(/^主催\s*/, ""))]
   ]);
 
   /* ---------- ② ブース一覧 ---------- */
@@ -173,7 +171,7 @@
     }
     if (b.slots) {
       h.push("<div><dt>えらべる枠</dt><dd>" + b.slots.map(function (sid) {
-        var sb = F.booth(sid); return sb ? esc(sb.short) + "（" + esc(String(sb.capacity)) + "名）" : "";
+        var sb = F.booth(sid); return sb ? '<span class="slot-state" data-slot="' + esc(sid) + '">' + esc(sb.short) + "（" + esc(String(sb.capacity)) + "名）</span>" : "";
       }).join("／") + "</dd></div>");
     }
     if (ex) {
@@ -216,6 +214,16 @@
       }
       if (!s || typeof s.remaining !== "number") return;
       el.hidden = false;
+      /* 枠ごとの空き（10時 満席 など）も、えらべる枠の並びに出す */
+      if (b0 && b0.slots) {
+        b0.slots.forEach(function (sid) {
+          var sp = F.$('.slot-state[data-slot="' + sid + '"]'), st = map[sid];
+          if (!sp || !st || typeof st.remaining !== "number") return;
+          var sb = F.booth(sid); if (!sb) return;
+          sp.textContent = sb.short + (st.remaining <= 0 ? "（満席）" : "（残り" + st.remaining + "）");
+          sp.className = "slot-state" + (st.remaining <= 0 ? " is-full" : "");
+        });
+      }
       if (s.remaining <= 0) {
         el.className = "remain full";
         el.textContent = "満席（当日枠あり）";
@@ -313,7 +321,6 @@
     ["駐車場", esc(E.parking)]
   ]);
   F.$("#map-link").href = F.mapUrl();
-  F.$("#map-url-text").textContent = "地図のURL：" + F.mapUrlText();
 
   /* ---------- ⑤ 問い合わせ ---------- */
   F.$("#contact-line").textContent = "このイベントのお問い合わせ先：" + E.contact;
