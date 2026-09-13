@@ -323,8 +323,8 @@ window.FESTA_DATA = {
   "kazetotaiyo": {
    "name": "風と太陽",
    "people": "大城 ゆりえさん",
-   "tag": "若石式足もみ・元社会福祉士",
-   "intro": "北中城村にある若石式足もみ。足の反射区にアプローチする本格的な足もみです。元社会福祉士の視点も持っています。",
+   "tag": "台湾式足もみ",
+   "intro": "北中城村にある台湾式足もみ。足の反射区にアプローチする本格的な足もみです。",
    "instagram": "https://www.instagram.com/kaze.to.taiyo/",
    "line": ""
   },

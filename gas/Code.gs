@@ -334,7 +334,7 @@ function apiLookup_(p) {
     status: String(row[R_STATUS - 1] || ''),
     booths: readDetail_(ss, no),
     checkedIn: String(row[R_STATUS - 1] || '') === ST_CAME,
-    checkedInAt: String(row[R_CHECKIN - 1] || ''),
+    checkedInAt: fmtAt_(row[R_CHECKIN - 1]),
     canceled: String(row[R_STATUS - 1] || '') === ST_CANCEL
   };
 }
@@ -525,7 +525,7 @@ function apiCheckin_(d) {
     if (status === ST_CANCEL) return { ok: false, error: 'canceled', no: no, name: String(found.values[R_NAME - 1] || '') };
 
     var already = (status === ST_CAME);
-    var at = String(found.values[R_CHECKIN - 1] || '');
+    var at = fmtAt_(found.values[R_CHECKIN - 1]);
     if (!already) {
       at = nowStr_();
       setStatus_(ss, found.row, no, ST_CAME, at);
@@ -810,6 +810,15 @@ function addLog_(ss, no, op, memo) {
 
 function nowStr_() {
   return Utilities.formatDate(new Date(), TZ, 'yyyy/MM/dd HH:mm:ss');
+}
+
+/** 来場時刻を「12/13 10:24」の形にする（台帳のセルが日付型でも文字でも同じ見た目に） */
+function fmtAt_(v) {
+  if (!v) return '';
+  if (Object.prototype.toString.call(v) === '[object Date]') return Utilities.formatDate(v, TZ, 'M/d HH:mm');
+  var m = String(v).match(/^(\d{4})\/(\d{1,2})\/(\d{1,2})\s+(\d{1,2}:\d{2})/);
+  if (m) return Number(m[2]) + '/' + Number(m[3]) + ' ' + m[4];
+  return String(v);
 }
 
 function padZero_(n, len) {
