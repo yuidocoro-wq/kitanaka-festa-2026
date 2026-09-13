@@ -716,3 +716,6 @@ h1,h2,h3{ text-wrap:balance; }
 .people-sub{ white-space:nowrap; font-weight:400; color:var(--ink-soft); }
 @media (max-width:767px){ .people-sub{ display:block; font-size:15px; margin-top:2px; } }
 @media (min-width:768px){ .people-sub{ margin-left:.3em; } }
+/* フッターのスタッフ用リンク（小さく・目立たせない）2026-09-14 */
+.staff-note{ font-size:14px; color:var(--ink-soft); margin-top:10px; }
+.staff-note a{ color:var(--ink-soft); text-decoration:underline; }
