@@ -531,6 +531,11 @@ function apiCheckin_(d) {
       setStatus_(ss, found.row, no, ST_CAME, at);
       addLog_(ss, no, 'checkin', trim_(d.memo, 200));
       SpreadsheetApp.flush();
+      /* 受付しましたメール（予約した体験と時間・集合のきまり入り） */
+      try {
+        var mailTo = String(found.values[R_MAIL - 1] || '');
+        if (mailTo && isEmail_(mailTo)) sendCheckinMail_(no, String(found.values[R_NAME - 1] || ''), mailTo, readDetail_(ss, no), at);
+      } catch (mErr) { addLog_(ss, no, 'mail-error', 'checkin: ' + String(mErr).slice(0, 150)); }
     }
     return {
       ok: true, no: no, already: already,
@@ -738,7 +743,8 @@ function readDetail_(ss, no) {
       name: String(vals[i][D_BNAME - 1] || ''),
       time: String(vals[i][D_TIME - 1] || ''),
       status: String(vals[i][D_STATUS - 1] || ''),
-      people: Number(vals[i][D_PEOPLE - 1] || 1)
+      people: Number(vals[i][D_PEOPLE - 1] || 1),
+      who: String(vals[i][D_WHO - 1] || '')
     });
   }
   return out;
@@ -1004,6 +1010,38 @@ function buildMailText_(no, name, booths, cancelUrl) {
   lines.push(EVENT.organizer);
   lines.push('お問い合わせ　' + EVENT.contact);
   return lines.join('\n');
+}
+
+/** 集合のきまり（ブースIDから） */
+function meetRule_(id) {
+  return (GROUP_UNIT_IDS.indexOf(String(id)) >= 0)
+    ? '開始10分前に舞台の前へお集まりください'
+    : '開始5分前にブースへお集まりください';
+}
+
+/** 来場受付のメール：受付しました＋予約した体験・時間・受ける人・集合のきまり */
+function sendCheckinMail_(no, name, email, booths, at) {
+  var rows = '', text = [];
+  for (var i = 0; i < booths.length; i++) {
+    var b = booths[i];
+    rows += '<tr><td style="padding:10px 12px;border-bottom:1px dashed #DDE7E2;vertical-align:top;">' +
+      '<div style="font-size:17px;font-weight:bold;">' + esc_(b.name) + '</div>' +
+      (b.time ? '<div style="font-size:15px;color:#555;">' + esc_(b.time) + '</div>' : '') +
+      (b.who ? '<div style="font-size:15px;color:#555;">受ける人：' + esc_(b.who) + '</div>' : '') +
+      '<div style="font-size:14px;color:#2F6B5A;">' + esc_(meetRule_(b.id)) + '</div>' +
+      '</td></tr>';
+    text.push('・' + b.name + (b.time ? '　' + b.time : '') + (b.who ? '　受ける人：' + b.who : '') + '　' + meetRule_(b.id));
+  }
+  var html = pageShell_('受付しました',
+    '<div style="text-align:center;padding:6px 0 14px;">' +
+    '<div style="display:inline-block;width:64px;height:64px;border-radius:50%;background:#468977;color:#fff;font-size:40px;line-height:64px;">✓</div>' +
+    '<h1 style="font-size:24px;margin:12px 0 4px;color:#2F6B5A;">受付しました</h1>' +
+    '<p style="font-size:16px;margin:0;color:#555;">' + esc_(name) + ' 様　予約番号 <strong>' + esc_(no) + '</strong>　' + esc_(at) + '</p></div>' +
+    '<p style="font-size:16px;line-height:1.8;margin:0 0 10px;">ようこそ。本日ご予約の体験はこちらです。時間になったら、それぞれの場所へお集まりください。</p>' +
+    '<table style="width:100%;border-collapse:collapse;background:#F4F8F6;border-radius:12px;">' + rows + '</table>' +
+    '<p style="font-size:14px;line-height:1.8;color:#555;margin:14px 0 0;">時間までに来られない場合は、当日枠の方にお譲りします。わからないことは受付までどうぞ。</p>');
+  var plain = ['受付しました', name + ' 様　予約番号 ' + no + '　' + at, '', '本日ご予約の体験：'].concat(text).concat(['', '時間までに来られない場合は、当日枠の方にお譲りします。', EVENT.organizer]).join('\n');
+  MailApp.sendEmail({ to: email, subject: '【' + EVENT.name + '】受付しました（予約番号 ' + no + '）', body: plain, htmlBody: html, name: EVENT.organizer });
 }
 
 /** キャンセルの確認ページ（「本当にキャンセルしますか？」） */
