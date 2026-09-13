@@ -708,3 +708,7 @@ h1,h2,h3{ text-wrap:balance; }
 .slot-state.is-full{ color:var(--ink-soft); text-decoration:line-through; }
 .age-hint{ margin:4px 0 0; color:var(--green-deep); font-weight:700; }
 .checkin-body #pin{ width:100%; min-height:56px; padding:12px 14px; font-size:22px; letter-spacing:.2em; border:2px solid var(--line); border-radius:var(--radius); font-family:inherit; }
+/* 出展者の写真（丸）2026-09-13 */
+.ex-photo{ float:right; width:104px; height:104px; border-radius:50%; object-fit:cover; margin:0 0 10px 14px; border:3px solid var(--tint); background:var(--tint); }
+.exhibitor::after, #modal-body::after{ content:""; display:block; clear:both; }
+@media (min-width:768px){ .ex-photo{ width:128px; height:128px; } }

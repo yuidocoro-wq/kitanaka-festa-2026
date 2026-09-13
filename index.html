@@ -277,6 +277,7 @@
     if (!ex) return "";
     var bs = boothsOf(key);
     return '<article class="exhibitor">' +
+      (ex.photo ? '<img class="ex-photo" src="' + esc(ex.photo) + '" alt="' + esc(ex.people) + '" width="104" height="104" loading="lazy">' : "") +
       "<h3>" + esc(ex.name) + "</h3>" +
       '<p class="people">' + esc(ex.people) + "</p>" +
       '<p class="tag">' + esc(ex.tag) + "</p>" +
@@ -293,6 +294,7 @@
     if (!ex) return;
     var bs = boothsOf(key);
     body.innerHTML =
+      (ex.photo ? '<img class="ex-photo" src="' + esc(ex.photo) + '" alt="' + esc(ex.people) + '" width="104" height="104">' : "") +
       '<h3 id="modal-title">' + esc(ex.name) + "</h3>" +
       '<p class="people">' + esc(ex.people) + "</p>" +
       '<p class="tag">' + esc(ex.tag) + "</p>" +

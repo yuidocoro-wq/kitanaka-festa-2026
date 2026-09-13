@@ -322,8 +322,9 @@ window.FESTA_DATA = {
   },
   "kazetotaiyo": {
    "name": "風と太陽",
-   "people": "大城 ゆりえさん",
+   "people": "大城 ゆりえさん（社会福祉士）",
    "tag": "台湾式足もみ",
+   "photo": "img/kazetotaiyo.jpg",
    "intro": "北中城村にある台湾式足もみ。足の反射区にアプローチする本格的な足もみです。",
    "instagram": "https://www.instagram.com/kaze.to.taiyo/",
    "line": ""
