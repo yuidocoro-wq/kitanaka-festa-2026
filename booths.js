@@ -367,6 +367,7 @@ window.FESTA_DATA = {
    "name": "ゆいどころ",
    "people": "比嘉 なつき（作業療法士）",
    "tag": "企画運営・受付",
+   "photo": "img/yuidocoro.jpg",
    "intro": "女性の為の整体 ゆいどころ。北中城村安谷屋のプライベートサロン。",
    "instagram": "https://www.instagram.com/yuidocoro_2021/",
    "line": "",
