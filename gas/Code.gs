@@ -35,7 +35,7 @@ var EVENT = {
   venue: '北中城村中央公民館 ホール',
   address: '沖縄県中頭郡北中城村字仲順435',
   parking: '無料駐車場139台',
-  organizer: '主催 北中城村役場／企画運営 ゆいどころ',
+  organizer: '主催 北中城村観光協会／企画運営 ゆいどころ整体',
   fee: '入場・体験 無料',
   contact: 'ゆいどころ（比嘉）080-6484-5121'
 };
@@ -905,7 +905,7 @@ function sendThanksMail_(no, name, email, booths, token) {
     subject: '【北中城フェスタ】ご予約ありがとうございます（予約番号 ' + no + '）',
     htmlBody: html,
     body: buildMailText_(no, name, booths, cancelUrl),
-    name: 'ゆいどころ（北中城フェスタ受付）'
+    name: 'ゆいどころ整体（北中城フェスタ受付）'
   };
   if (qrBlob) opts.inlineImages = { qrimg: qrBlob };
   MailApp.sendEmail(opts);
