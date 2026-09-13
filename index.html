@@ -260,7 +260,8 @@
   }
 
   function boothsOf(key) {
-    return F.DATA.booths.filter(function (b) { return b.exhibitor === key; })
+    /* 時間枠（group を持つ子ブース）は親の名前に含まれるので並べない */
+    return F.DATA.booths.filter(function (b) { return b.exhibitor === key && !b.group; })
       .map(function (b) { return b.name; }).join("／");
   }
 
