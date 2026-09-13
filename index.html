@@ -273,6 +273,12 @@
     if (exOrder.indexOf(k) < 0) exOrder.push(k);
   });
 
+  /* 「大城 ゆりえさん（社会福祉士）」→ 名前と（肩書き）を分けて、携帯では肩書きを名前の下の行に */
+  function peopleHtml(str) {
+    var m = String(str || "").match(/^(.*?)(（[^（）]*）)$/);
+    return m ? esc(m[1]) + '<span class="people-sub">' + esc(m[2]) + "</span>" : esc(str);
+  }
+
   F.$("#exhibitor-list").innerHTML = exOrder.map(function (key) {
     var ex = F.exhibitor(key);
     if (!ex) return "";
@@ -280,7 +286,7 @@
     return '<article class="exhibitor">' +
       (ex.photo ? '<img class="ex-photo" src="' + esc(ex.photo) + '" alt="' + esc(ex.people) + '" width="104" height="104" loading="lazy">' : "") +
       "<h3>" + esc(ex.name) + "</h3>" +
-      '<p class="people">' + esc(ex.people) + "</p>" +
+      '<p class="people">' + peopleHtml(ex.people) + "</p>" +
       '<p class="tag">' + esc(ex.tag) + "</p>" +
       (bs ? '<p class="booths-of">担当：' + esc(bs) + "</p>" : "") +
       '<p class="intro">' + esc(ex.intro) + "</p>" +
@@ -297,7 +303,7 @@
     body.innerHTML =
       (ex.photo ? '<img class="ex-photo" src="' + esc(ex.photo) + '" alt="' + esc(ex.people) + '" width="104" height="104">' : "") +
       '<h3 id="modal-title">' + esc(ex.name) + "</h3>" +
-      '<p class="people">' + esc(ex.people) + "</p>" +
+      '<p class="people">' + peopleHtml(ex.people) + "</p>" +
       '<p class="tag">' + esc(ex.tag) + "</p>" +
       (bs ? '<p class="booths-of">担当：' + esc(bs) + "</p>" : "") +
       '<p class="intro">' + esc(ex.intro) + "</p>" +

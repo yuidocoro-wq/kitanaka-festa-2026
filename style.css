@@ -712,3 +712,7 @@ h1,h2,h3{ text-wrap:balance; }
 .ex-photo{ float:right; width:104px; height:104px; border-radius:50%; object-fit:cover; margin:0 0 10px 14px; border:3px solid var(--tint); background:var(--tint); }
 .exhibitor::after, #modal-body::after{ content:""; display:block; clear:both; }
 @media (min-width:768px){ .ex-photo{ width:128px; height:128px; } }
+/* 名前の横の（肩書き）：途中で折らない。携帯では名前の下の行に */
+.people-sub{ white-space:nowrap; font-weight:400; color:var(--ink-soft); }
+@media (max-width:767px){ .people-sub{ display:block; font-size:15px; margin-top:2px; } }
+@media (min-width:768px){ .people-sub{ margin-left:.3em; } }
