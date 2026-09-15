@@ -28,9 +28,21 @@
     <h1>体験の予約</h1>
     <p class="date" id="hero-date"></p>
     <p><span class="free" id="hero-free"></span></p>
+    <div class="who" id="who" aria-label="だれが参加するかでえらぶ">
+      <p class="who-t">年齢別おすすめ体験　<span class="who-hint">押すと、その年齢向けの体験だけが並びます</span></p>
+      <div class="who-btns">
+        <button type="button" class="who-btn" data-age="baby">乳児<small>0〜1歳</small></button>
+        <button type="button" class="who-btn" data-age="toddler">幼児<small>1歳〜就学前</small></button>
+        <button type="button" class="who-btn" data-age="kids">小学生</button>
+        <button type="button" class="who-btn" data-age="teen">中・高生</button>
+        <button type="button" class="who-btn" data-age="adult">大人</button>
+        <button type="button" class="who-btn" data-age="senior">シニア</button>
+      </div>
+      <p class="who-now" id="who-now" hidden></p>
+    </div>
     <nav class="bigmenu" aria-label="見たいところをえらぶ">
-      <a class="big" href="#hall"><svg viewBox="0 0 24 24"><rect x="3" y="9" width="18" height="10" rx="2"/><path d="M7 9V6h10v3M9 19v2M15 19v2"/></svg><span class="kana">ホールイベント</span><span class="sub">レース・運動あそび</span></a>
-      <a class="big" href="#booths"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4M9 15l2 2 4-4"/></svg><span class="kana">ブース予約</span><span class="sub">足もみ・整体・チェア体操</span></a>
+      <a class="big" href="#hall"><svg viewBox="0 0 24 24"><rect x="3" y="9" width="18" height="10" rx="2"/><path d="M7 9V6h10v3M9 19v2M15 19v2"/></svg><span class="kana">ホールイベント</span><span class="sub">レース・運動あそび・チェア体操</span></a>
+      <a class="big" href="#booths"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4M9 15l2 2 4-4"/></svg><span class="kana">ブース予約</span><span class="sub">足もみ・整体・コンディショニング</span></a>
       <a class="big" href="#exhibitors"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20c0-3.5 2.5-6 6-6s6 2.5 6 6M15 20c0-2.5 1.5-4.5 4-4.5s3 1.5 3 4.5"/></svg><span class="kana">出展者</span><span class="sub">出展するみなさんの紹介</span></a>
       <a class="big" href="#access"><svg viewBox="0 0 24 24"><path d="M12 21s-6-5.5-6-11a6 6 0 0 1 12 0c0 5.5-6 11-6 11z"/><circle cx="12" cy="10" r="2.2"/></svg><span class="kana">アクセス</span><span class="sub">会場・駐車場・地図</span></a>
     </nav>
@@ -152,11 +164,13 @@
   /* ---------- ② ブース一覧 ---------- */
   
 
+  var AGE_LABEL = { baby: "乳児", toddler: "幼児", kids: "小学生", teen: "中・高生", adult: "大人", senior: "シニア" };
   function boothCard(b) {
     var ex = F.exhibitor(b.exhibitor);
     var prov = F.provisionalNote(b);
     var h = [];
-    h.push('<article class="booth' + (b.reserve ? "" : " is-free") + '" id="booth-' + esc(b.id) + '">');
+    h.push('<article class="booth' + (b.reserve ? "" : " is-free") + '" id="booth-' + esc(b.id) + '" data-ages="' + esc((b.ages || []).join(" ")) + '">');
+    if (b.ages && b.ages.length) h.push('<p class="age-tags">' + b.ages.map(function (a) { return '<span class="age-tag">' + esc(AGE_LABEL[a] || a) + "</span>"; }).join("") + "</p>");
     h.push("<h3>" + esc(b.name) + (prov ? '<span class="tag-provisional">' + esc(prov) + "</span>" : "") + "</h3>");
     h.push('<p class="zone">' + esc(b.zone) + "</p>");
     if (b.reserve) {
@@ -199,8 +213,41 @@
   }
 
   var cards = F.DATA.booths.filter(function (b) { return !b.group; });
-  F.$("#hall-list").innerHTML = cards.filter(function (b) { return b.zone.charAt(0) === "B"; }).map(boothCard).join("");
-  F.$("#care-list").innerHTML = cards.filter(function (b) { return b.zone.charAt(0) === "C"; }).map(boothCard).join("");
+  /* 節の先頭に、題名だけのボタンを並べる（押すとそのカードへ） */
+  function titleMenu(list) {
+    return '<nav class="title-menu" aria-label="この節の体験">' + list.map(function (b) {
+      return '<a class="title-btn" href="#booth-' + esc(b.id) + '" data-booth="' + esc(b.id) + '">' + esc(String(b.name).replace(/（[^（）]*）/g, "").replace(/^れなさんの/, "")) + "</a>";
+    }).join("") + "</nav>";
+  }
+  var hallCards = cards.filter(function (b) { return b.zone.charAt(0) === "B"; });
+  var careCards = cards.filter(function (b) { return b.zone.charAt(0) === "C"; });
+  F.$("#hall-list").innerHTML = titleMenu(hallCards) + hallCards.map(boothCard).join("");
+  F.$("#care-list").innerHTML = titleMenu(careCards) + careCards.map(boothCard).join("");
+
+  /* ---------- だれが参加？（年齢で絞る） ---------- */
+  var whoNow = null;
+  function applyWho(age) {
+    whoNow = (whoNow === age) ? null : age;
+    F.$$(".who-btn").forEach(function (btn) { btn.classList.toggle("is-on", btn.getAttribute("data-age") === whoNow); });
+    var n = 0;
+    F.$$("article.booth").forEach(function (el) {
+      var ok = !whoNow || (" " + el.getAttribute("data-ages") + " ").indexOf(" " + whoNow + " ") >= 0;
+      el.hidden = !ok; if (ok && whoNow) n++;
+      var tb = F.$('.title-btn[data-booth="' + el.id.replace(/^booth-/, "") + '"]'); if (tb) tb.hidden = !ok;
+    });
+    var now = F.$("#who-now");
+    if (whoNow) { now.hidden = false; now.innerHTML = esc(AGE_LABEL[whoNow]) + "向けの体験を " + n + " つ表示しています。<button type=\"button\" class=\"who-clear\" id=\"who-clear\">全部を見る</button>"; F.$("#who-clear").addEventListener("click", function () { applyWho(whoNow); }); }
+    else { now.hidden = true; now.innerHTML = ""; }
+    /* 空になった節に「該当なし」を出す */
+    ["#hall-list", "#care-list"].forEach(function (sel) {
+      var box = F.$(sel); var empty = box.querySelector(".who-empty");
+      var any = F.$$("article.booth", box).some(function (el) { return !el.hidden; });
+      if (!any && whoNow) { if (!empty) { empty = document.createElement("p"); empty.className = "who-empty muted"; empty.textContent = "この節には、その方向けの体験はありません。"; box.appendChild(empty); } }
+      else if (empty) empty.remove();
+    });
+    if (whoNow) { var first = F.$$("article.booth").filter(function (el) { return !el.hidden; })[0]; if (first) first.scrollIntoView({ behavior: "smooth", block: "start" }); }
+  }
+  F.$$(".who-btn").forEach(function (btn) { btn.addEventListener("click", function () { applyWho(btn.getAttribute("data-age")); }); });
 
   /* 残り枠を受付係にきく */
   function paintRemain(map) {
