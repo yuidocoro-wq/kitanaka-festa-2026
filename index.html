@@ -6,7 +6,7 @@
 <title>北中城村ウェルネススポーツフェスタ2026｜体験の予約</title>
 <meta name="description" content="2026年12月13日（日）北中城村中央公民館ホール。入場・体験は無料です。気になるブースの体験をこのページから予約できます。">
 <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700&family=M+PLUS+1p:wght@400;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=20260916b">
+<link rel="stylesheet" href="style.css?v=20260916c">
 </head>
 <body>
 
@@ -132,9 +132,9 @@
   </div>
 </div>
 
-<script src="config.js?v=20260916b"></script>
-<script src="booths.js?v=20260916b"></script>
-<script src="app.js?v=20260916b"></script>
+<script src="config.js?v=20260916c"></script>
+<script src="booths.js?v=20260916c"></script>
+<script src="app.js?v=20260916c"></script>
 <script>
 (function () {
   "use strict";
@@ -323,8 +323,11 @@
 
   /* 「大城 ゆりえさん（社会福祉士）」→ 名前と（肩書き）を分けて、携帯では肩書きを名前の下の行に */
   function peopleHtml(str) {
-    var m = String(str || "").match(/^(.*?)(（[^（）]*）)$/);
-    return m ? esc(m[1]) + '<span class="people-sub">' + esc(m[2]) + "</span>" : esc(str);
+    // 1人だけ（「（」が1つ）のときだけ肩書きを小さく添える。複数人（なーなさん（保育士）・…）はそのまま
+    var t = String(str || "");
+    var m = t.match(/^(.*?)(（[^（）]*）)$/);
+    if (!m || (t.split("（").length - 1) !== 1) return esc(t);
+    return esc(m[1]) + '<span class="people-sub">' + esc(m[2]) + "</span>";
   }
 
   F.$("#exhibitor-list").innerHTML = exOrder.map(function (key) {
