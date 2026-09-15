@@ -146,7 +146,7 @@
     ["会場", esc(E.venue)],
     ["参加費", esc(E.fee)],
     ["駐車場", esc(E.parking)],
-    ["主催・運営", esc(String(E.organizer).replace(/^主催\s*/, ""))]
+    ["主催・運営", esc(E.organizer).split("／").join("<br>")]
   ]);
 
   /* ---------- ② ブース一覧 ---------- */

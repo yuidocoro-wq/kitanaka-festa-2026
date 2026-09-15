@@ -35,7 +35,7 @@ var EVENT = {
   venue: '北中城村中央公民館 ホール',
   address: '沖縄県中頭郡北中城村字仲順435',
   parking: '無料駐車場139台',
-  organizer: '主催 北中城村観光協会／企画運営 ゆいどころ整体',
+  organizer: '主催：北中城村（企画振興課）／運営：北中城村観光協会／運営受託：ゆいどころ',
   fee: '入場・体験 無料',
   contact: 'ゆいどころ（比嘉）080-6484-5121'
 };
@@ -914,7 +914,7 @@ function sendThanksMail_(no, name, email, booths, token) {
     subject: '【北中城フェスタ】ご予約ありがとうございます（予約番号 ' + no + '）',
     htmlBody: html,
     body: buildMailText_(no, name, booths, cancelUrl),
-    name: 'ゆいどころ整体（北中城フェスタ受付）'
+    name: 'ゆいどころ（北中城フェスタ受付）'
   };
   if (qrBlob) opts.inlineImages = { qrimg: qrBlob };
   MailApp.sendEmail(opts);
@@ -1050,7 +1050,7 @@ function sendCheckinMail_(no, name, email, booths, at) {
     '<table style="width:100%;border-collapse:collapse;background:#F4F8F6;border-radius:12px;">' + rows + '</table>' +
     '<p style="font-size:14px;line-height:1.8;color:#555;margin:14px 0 0;">時間までに来られない場合は、当日枠の方にお譲りします。わからないことは受付までどうぞ。</p>');
   var plain = ['受付しました', name + ' 様　予約番号 ' + no + '　' + at, '', '本日ご予約の体験：'].concat(text).concat(['', '時間までに来られない場合は、当日枠の方にお譲りします。', EVENT.organizer]).join('\n');
-  MailApp.sendEmail({ to: email, subject: '【' + EVENT.name + '】受付しました（予約番号 ' + no + '）', body: plain, htmlBody: html, name: EVENT.organizer });
+  MailApp.sendEmail({ to: email, subject: '【' + EVENT.name + '】受付しました（予約番号 ' + no + '）', body: plain, htmlBody: html, name: 'ゆいどころ（北中城フェスタ受付）' });
 }
 
 /** キャンセルの確認ページ（「本当にキャンセルしますか？」） */
