@@ -87,7 +87,8 @@
           </label>
         </div>
 
-        <div class="field" id="field-more">
+        <!-- 9/16 山野さん感想を受けて「ほかにも予約する」は使わない（1回の申込＝1つの体験）。部品は残して非表示 -->
+        <div class="field" id="field-more" hidden>
           <button type="button" class="btn btn-sub" id="other-open">＋ ほかにも予約する</button>
           <p class="hint">時間が重ならない体験は、いっしょに予約できます。</p>
           <div id="other-panel" hidden></div>
@@ -136,7 +137,8 @@
 
       <div class="card no-print">
         <a class="btn btn-sub" id="t-map" href="#" target="_blank" rel="noopener">会場の地図を開く</a>
-        <a class="btn btn-quiet" href="index.html">ほかのブースを見る</a>
+        <a class="btn btn-quiet" href="index.html#booths">ほかの体験も予約する</a>
+        <p class="small">ほかの体験も予約したいときは、上のボタンからもう一度お申し込みください（お名前などは、このスマホに覚えています）。予約番号は体験ごとに1つずつ届きます。</p>
         <p class="small">キャンセルは、確認メールの「予約をキャンセルする」を押してください。「本当にキャンセルしますか？」→「キャンセルする」で完了します（お電話はいりません）。内容を変えたいときは、いちどキャンセルしてから予約し直してください。</p>
         <p class="small">わからないことは <span id="t-contact"></span> まで。</p>
       </div>
@@ -184,7 +186,7 @@
     head.innerHTML = gh.join("");
     head.className = "booth";
     F.$("#other-label").textContent = "時間（部）を1つえらんでください";
-    F.$("#field-other .hint").textContent = "1つだけえらべます。ほかの体験も予約したいときは、予約が終わったあとに「ほかのブースを見る」からどうぞ。";
+    F.$("#field-other .hint").textContent = "1つだけえらべます。ほかの体験も予約したいときは、この予約が終わったあとに「ほかの体験も予約する」からどうぞ。";
   } else if (mainBooth) {
     var prov = F.provisionalNote(mainBooth);
     var h = [];
@@ -424,7 +426,7 @@
       }
     }).catch(function () { });
   }
-  if (F.qs("more") === "1") { F.$("#other-open").click(); var fb = F.$("[data-exp-btn]"); if (fb) fb.click(); }
+  /* more=1（ほかにも予約するを自動で開く）は 9/16 に廃止 */
   F.$("#other-list").addEventListener("change", updateChildAge);
   F.$("#other-panel").addEventListener("change", updateChildAge);
   updateChildAge();
