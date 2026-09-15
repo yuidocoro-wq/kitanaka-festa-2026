@@ -55,6 +55,7 @@ window.FESTA_DATA = {
    "start": "13:35",
    "end": "14:05",
    "ages": [
+    "baby",
     "toddler"
    ]
   },
@@ -79,6 +80,7 @@ window.FESTA_DATA = {
    ],
    "meet": "開始5分前にブースへお越しください。来られない場合は、当日枠の方にお譲りします",
    "ages": [
+    "toddler",
     "kids",
     "teen"
    ]
@@ -134,7 +136,7 @@ window.FESTA_DATA = {
    "duration": "30分（案）",
    "target": "小学生〜大人（親子・家族で）",
    "capacity": 15,
-   "capacityNote": "予約15（仮・要確認）",
+   "capacityNote": "9/16 なつきさん：予約15人",
    "reserve": true,
    "unit": "名",
    "desc": "勝負しながら体を動かす！ 大人対子どもの対決の運動あそびや、ケガ予防のための運動をご用意します。楽しみながらもトレーニングの要素を取り入れた、おもしろワーク。ぜひご体験ください。",
@@ -172,9 +174,10 @@ window.FESTA_DATA = {
    ],
    "meet": "開始5分前にブースへお越しください。来られない場合は、当日枠の方にお譲りします",
    "ages": [
+    "toddler",
+    "kids",
     "adult",
-    "senior",
-    "kids"
+    "senior"
    ]
   },
   {
@@ -252,24 +255,25 @@ window.FESTA_DATA = {
    "name": "ストレッチ＆コンディショニング（舞子さん）",
    "short": "ストレッチ",
    "zone": "C-5 ケアブース",
-   "time": "10:00〜15:00（各15分）・事前予約は11時・12時・13時・14時",
+   "time": "10時・11時・13時・14時（各15分）。12時はお休み",
    "duration": "15分",
    "target": "子どもから大人、年配の方まで",
    "capacity": 4,
-   "capacityNote": "9/16 なつきさん：事前予約4人程度・1時間ごと。時刻は仮（10時は集団チェアと重なるため外した・要確認）",
+   "capacityNote": "9/16 なつきさん：10時から受付可。12時は空けて4人（10・11・13・14時 各1人）",
    "reserve": true,
    "unit": "名",
    "desc": "リラクゼーションの要素も入れながら、ストレッチや体のコンディショニングを整えていきます。日ごろのお疲れさまな体を癒しに来てください。",
    "exhibitor": "motobu",
    "status": "仮",
    "slots": [
+    "stretch_10",
     "stretch_11",
-    "stretch_12",
     "stretch_13",
     "stretch_14"
    ],
    "meet": "開始5分前にブースへお越しください。来られない場合は、当日枠の方にお譲りします",
    "ages": [
+    "toddler",
     "kids",
     "teen",
     "adult",
@@ -388,7 +392,6 @@ window.FESTA_DATA = {
    "group": "kids",
    "meet": "開始5分前にブースへお越しください。来られない場合は、当日枠の方にお譲りします",
    "ages": [
-    "baby",
     "toddler",
     "kids"
    ]
@@ -492,6 +495,25 @@ window.FESTA_DATA = {
    "end": "14:15"
   },
   {
+   "id": "stretch_10",
+   "name": "ストレッチ＆コンディショニング 10:00の枠",
+   "short": "10時",
+   "zone": "C-5 ケアブース",
+   "time": "10:00〜10:15",
+   "duration": "15分",
+   "target": "子どもから大人、年配の方まで",
+   "capacity": 1,
+   "reserve": true,
+   "unit": "名",
+   "desc": "",
+   "exhibitor": "motobu",
+   "status": "仮",
+   "group": "stretch",
+   "meet": "開始5分前にブースへお越しください。来られない場合は、当日枠の方にお譲りします",
+   "start": "10:00",
+   "end": "10:15"
+  },
+  {
    "id": "stretch_11",
    "name": "ストレッチ＆コンディショニング 11:00の枠",
    "short": "11時",
@@ -509,25 +531,6 @@ window.FESTA_DATA = {
    "meet": "開始5分前にブースへお越しください。来られない場合は、当日枠の方にお譲りします",
    "start": "11:00",
    "end": "11:15"
-  },
-  {
-   "id": "stretch_12",
-   "name": "ストレッチ＆コンディショニング 12:00の枠",
-   "short": "12時",
-   "zone": "C-5 ケアブース",
-   "time": "12:00〜12:15",
-   "duration": "15分",
-   "target": "子どもから大人、年配の方まで",
-   "capacity": 1,
-   "reserve": true,
-   "unit": "名",
-   "desc": "",
-   "exhibitor": "motobu",
-   "status": "仮",
-   "group": "stretch",
-   "meet": "開始5分前にブースへお越しください。来られない場合は、当日枠の方にお譲りします",
-   "start": "12:00",
-   "end": "12:15"
   },
   {
    "id": "stretch_13",
