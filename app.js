@@ -170,3 +170,30 @@
     saveLastNo: saveLastNo, loadLastNo: loadLastNo
   };
 })(window);
+
+/* ---------- スマホ：固定メニューの縮小と「▲ トップへ」（2026-09-16） ---------- */
+(function () {
+  var head = document.querySelector(".site-head");
+  if (!head) return;
+  var top = document.createElement("a");
+  top.className = "to-top";
+  top.href = "#top";
+  top.setAttribute("aria-label", "ページの上へ戻る");
+  top.innerHTML = '<svg viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></svg>トップへ';
+  top.addEventListener("click", function (e) {
+    e.preventDefault();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+  document.body.appendChild(top);
+  var ticking = false;
+  function update() {
+    ticking = false;
+    var y = window.pageYOffset || document.documentElement.scrollTop || 0;
+    head.classList.toggle("is-compact", y > 120);
+    top.classList.toggle("is-on", y > 600);
+  }
+  window.addEventListener("scroll", function () {
+    if (!ticking) { ticking = true; window.requestAnimationFrame(update); }
+  }, { passive: true });
+  update();
+})();

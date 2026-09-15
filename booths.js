@@ -602,7 +602,7 @@ window.FESTA_DATA = {
    "people": "久場 創さん",
    "tag": "理学療法士・体芯力®認定指導者",
    "intro": "北中城村にある「頑張らないトレーニング・整体」。理学療法士として、スポーツをするお子さんから大人まで体をサポートしています。",
-   "instagram": "",
+   "instagram": "https://www.instagram.com/okinawa.seitai.kubatore/",
    "line": "",
    "web": "https://kubatore.com/"
   },
