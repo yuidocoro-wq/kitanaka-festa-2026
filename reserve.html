@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>体験の予約｜北中城村ウェルネススポーツフェスタ2026</title>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700&family=M+PLUS+1p:wght@400;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=20260916d">
+<link rel="stylesheet" href="style.css?v=20260916e">
 </head>
 <body>
 
@@ -155,9 +155,9 @@
   </div>
 </footer>
 
-<script src="config.js?v=20260916d"></script>
-<script src="booths.js?v=20260916d"></script>
-<script src="app.js?v=20260916d"></script>
+<script src="config.js?v=20260916e"></script>
+<script src="booths.js?v=20260916e"></script>
+<script src="app.js?v=20260916e"></script>
 <script>
 (function () {
   "use strict";
@@ -186,7 +186,7 @@
     head.innerHTML = gh.join("");
     head.className = "booth";
     F.$("#other-label").textContent = "時間（部）を1つえらんでください";
-    F.$("#field-other .hint").textContent = "1つだけえらべます。ほかの体験も予約したいときは、この予約が終わったあとに「ほかの体験も予約する」からどうぞ。";
+    F.$("#field-other .hint").textContent = "1つだけえらべます（あとから別の時間に選び直せます）。ほかの体験も予約したいときは、この予約が終わったあとに「ほかの体験も予約する」からどうぞ。";
   } else if (mainBooth) {
     var prov = F.provisionalNote(mainBooth);
     var h = [];
@@ -390,7 +390,9 @@
       var b = F.booth(i.value); if (!b) return;
       var bad = false;
       chosen.forEach(function (c) { if (c.id !== b.id && overlaps(c, b)) bad = true; });
-      if (!i.checked && b.group) chosen.forEach(function (c) { if (c.group === b.group && c.id !== b.id) bad = true; });
+      /* 同じ体験のほかの時間は、チェックボックス（ほかにも予約）のときだけ塞ぐ。
+         ラジオ（時間（部）を1つえらぶ）は1つしか選べないので塞がない＝あとから選び直せる（9/16 山野さん指摘） */
+      if (!i.checked && b.group && i.type !== "radio") chosen.forEach(function (c) { if (c.group === b.group && c.id !== b.id) bad = true; });
       var wrap = i.closest("label"), ng = wrap.querySelector(".ng");
       if (bad && !i.checked) { i.disabled = true; wrap.style.opacity = ".55"; if (ng) ng.hidden = false; }
       else { i.disabled = false; wrap.style.opacity = ""; if (ng) ng.hidden = true; }
