@@ -713,6 +713,7 @@ window.FESTA_DATA = {
   "motobu": {
    "name": "もとぶ糀の里工房 みら／MK2",
    "people": "嘉手苅 舞子さん・もときさん",
+   "photo": "img/motobukoji.jpg",
    "tag": "発酵食品（もとぶ糀の里工房 みら）・コンディショニング（MK2）",
    "intro": "本部町で、自家製の糀を使った甘酒やお味噌をつくる「もとぶ糀の里工房 みら」。コンディショニングは「MK2」の名前で活動しています。ご夫婦ともトレーナー資格を持つ、健康と発酵のプロです。",
    "instagram": "https://www.instagram.com/motobukouji.85/",
