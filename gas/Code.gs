@@ -10,7 +10,7 @@
  * 作成: ゆいどころ AI秘書「みお」 / 2026-09-11
  */
 
-var VERSION = '1.0.0';
+var VERSION = '1.1.0';   // 1.1.0（2026-09-20）来場のみの登録（visitOnly）に対応
 
 /* =========================================================
  * 1. 設定
@@ -79,6 +79,11 @@ var B_ID = 1, B_NAME = 2, B_TIME = 3, B_CAP = 4, B_OPEN = 5, B_NOTE = 6;
 var ST_RESERVED = '予約';
 var ST_CAME = '来場';
 var ST_CANCEL = 'キャンセル';
+
+/* 来場のみの登録（体験をえらばない申込）。台帳の列は増やさず、
+   「種別」列に visit、「予約ブース」列に 来場のみ と入れて見分けます */
+var TYPE_VISIT = 'visit';
+var VISIT_LABEL = '来場のみ';
 
 /* =========================================================
  * 2. 初期設定（最初に1回だけ実行）
@@ -333,6 +338,8 @@ function apiLookup_(p) {
     note: String(row[R_NOTE - 1] || ''),
     status: String(row[R_STATUS - 1] || ''),
     booths: readDetail_(ss, no),
+    type: String(row[R_TYPE - 1] || ''),
+    visitOnly: isVisitOnly_(row),
     checkedIn: String(row[R_STATUS - 1] || '') === ST_CAME,
     checkedInAt: fmtAt_(row[R_CHECKIN - 1]),
     canceled: String(row[R_STATUS - 1] || '') === ST_CANCEL
@@ -355,15 +362,18 @@ function apiCancelPage_(p) {
       msg = 'リンクが正しくないようです。お手数ですが受付までお電話ください。';
     } else if (String(found.values[R_STATUS - 1]) === ST_CANCEL) {
       ok = true;
-      msg = 'この予約はすでにキャンセル済みです。';
+      msg = isVisitOnly_(found.values) ? 'この来場登録は、すでに取り消しずみです。' : 'この予約はすでにキャンセル済みです。';
     } else if (String(p.confirm || '') !== '1') {
       /* まず確認ページ。ここでは何も変えない */
-      return confirmCancelHtml_(no, String(found.values[R_NAME - 1] || ''), readDetail_(ss, no), token);
+      return confirmCancelHtml_(no, String(found.values[R_NAME - 1] || ''), readDetail_(ss, no), token, isVisitOnly_(found.values));
     } else {
+      var wasVisit = isVisitOnly_(found.values);
       setStatus_(ss, found.row, no, ST_CANCEL);
       addLog_(ss, no, 'cancel', 'メールのリンクから');
       ok = true;
-      msg = 'キャンセルを受け付けました。またのご参加をお待ちしています。';
+      msg = wasVisit
+        ? '来場登録を取り消しました。当日そのままお越しいただくこともできます。'
+        : 'キャンセルを受け付けました。またのご参加をお待ちしています。';
     }
   } catch (err) {
     msg = 'ただいま混み合っています。少し時間をおいてもう一度お試しください。';
@@ -395,8 +405,12 @@ function apiReserve_(d) {
   if (children === null) return { ok: false, error: 'invalid', field: 'children', message: '子どもの人数は0〜10で入れてください' };
   if (adults + children < 1) return { ok: false, error: 'invalid', field: 'adults', message: '人数を1人以上にしてください' };
 
+  /* 来場のみの登録（体験をえらばない）。visitOnly が来たときだけ、体験ゼロを許します */
+  var visitOnly = (d.visitOnly === true || String(d.visitOnly) === 'true');
+
   var ids = toIdList_(d.booths);
-  if (ids.length === 0) return { ok: false, error: 'booths', message: '予約したいブースを選んでください' };
+  if (visitOnly) ids = [];                       // 来場のみのときは体験を受け取らない
+  if (ids.length === 0 && !visitOnly) return { ok: false, error: 'booths', message: '予約したいブースを選んでください' };
   var count = toCount_(d.count);                 // この体験を受ける人数（省略時1）
   if (count === null || count < 1) count = 1;
 
@@ -461,14 +475,14 @@ function apiReserve_(d) {
     row[R_ADULTS - 1] = adults;
     row[R_CHILDREN - 1] = children;
     row[R_MONTHS - 1] = months;
-    row[R_BOOTHS - 1] = names.join('、');
+    row[R_BOOTHS - 1] = visitOnly ? VISIT_LABEL : names.join('、');
     row[R_NOTE - 1] = note;
     row[R_BIRTH - 1] = trim_(d.birth, 40);      // 保険登録用（9/12 なつきさん）
     row[R_ADDR - 1] = trim_(d.address, 200);
     row[R_STATUS - 1] = ST_RESERVED;
     row[R_CHECKIN - 1] = '';
     row[R_TOKEN - 1] = token;
-    row[R_TYPE - 1] = 'web';
+    row[R_TYPE - 1] = visitOnly ? TYPE_VISIT : 'web';
     shR.appendRow(row);
 
     var shD = ss.getSheetByName(SH_DETAIL);
@@ -479,7 +493,8 @@ function apiReserve_(d) {
       if (!whoNames.length) whoNames.push(name);
       dRows.push([no, picked[i].id, picked[i].name, picked[i].time, ST_RESERVED, picked[i].need || 1, whoNames.join('・')]);
     }
-    shD.getRange(shD.getLastRow() + 1, 1, dRows.length, D_COLS).setValues(dRows);
+    /* 来場のみのときは予約明細（体験ごとの行）を作りません */
+    if (dRows.length > 0) shD.getRange(shD.getLastRow() + 1, 1, dRows.length, D_COLS).setValues(dRows);
     var shP = ss.getSheetByName(SH_PEOPLE);
     if (shP) {
       var pRows = [];
@@ -498,12 +513,14 @@ function apiReserve_(d) {
 
     var mailed = false;
     try {
-      sendThanksMail_(no, name, email, outBooths, token);
+      if (visitOnly) sendVisitMail_(no, name, email, token);
+      else sendThanksMail_(no, name, email, outBooths, token);
       mailed = true;
     } catch (err2) {
       addLog_(ss, no, 'mail-error', String(err2));
     }
-    return { ok: true, no: no, name: name, booths: outBooths, mailed: mailed };
+    if (visitOnly) addLog_(ss, no, 'visit-register', String(people.length) + '名');
+    return { ok: true, no: no, name: name, booths: outBooths, mailed: mailed, visitOnly: visitOnly };
   } finally {
     try { lock.releaseLock(); } catch (e3) { }
   }
@@ -544,6 +561,8 @@ function apiCheckin_(d) {
       adults: Number(found.values[R_ADULTS - 1] || 0),
       children: Number(found.values[R_CHILDREN - 1] || 0),
       booths: readDetail_(ss, no),
+      type: String(found.values[R_TYPE - 1] || ''),
+      visitOnly: isVisitOnly_(found.values),
       checkedIn: true,
       checkedInAt: at
     };
@@ -563,18 +582,34 @@ function apiParticipate_(d) {
   try {
     var ss = getSS_();
     var shD = ss.getSheetByName(SH_DETAIL);
-    if (!shD || shD.getLastRow() < 2) return { ok: false, error: 'notfound' };
-    var vals = shD.getRange(2, 1, shD.getLastRow() - 1, D_COLS).getValues();
-    var hit = false;
+    if (!shD) return { ok: false, error: 'notfound' };
+    var vals = (shD.getLastRow() >= 2) ? shD.getRange(2, 1, shD.getLastRow() - 1, D_COLS).getValues() : [];
+    var hit = false, added = false;
     for (var i = 0; i < vals.length; i++) {
       if (String(vals[i][D_NO - 1]) === no && String(vals[i][D_BID - 1]) === bid) {
         if (String(vals[i][D_STATUS - 1]) !== ST_CANCEL) { shD.getRange(i + 2, D_STATUS).setValue(ST_DONE); hit = true; }
       }
     }
+    /* 予約していないブースに、その場で入ったとき（来場のみの方など）。
+       add:true が来たときだけ、予約明細に「参加済み」の行をその場で足します。
+       （add が無いこれまでの呼び出しは、今までどおり notfound のままです） */
+    if (!hit && (d.add === true || String(d.add) === 'true')) {
+      var foundR = findReservation_(ss, no);
+      if (!foundR) return { ok: false, error: 'notfound' };
+      if (String(foundR.values[R_STATUS - 1] || '') === ST_CANCEL) return { ok: false, error: 'canceled', no: no };
+      var bmap = {}, bl = readBooths_(ss);
+      for (var bi = 0; bi < bl.length; bi++) bmap[bl[bi].id] = bl[bi];
+      var bName = bmap[bid] ? bmap[bid].name : (trim_(d.boothName, 120) || bid);
+      var bTime = bmap[bid] ? bmap[bid].time : trim_(d.boothTime, 60);
+      var who = trim_(d.who, 120) || String(foundR.values[R_NAME - 1] || '');
+      shD.getRange(shD.getLastRow() + 1, 1, 1, D_COLS)
+        .setValues([[no, bid, bName, bTime, ST_DONE, 1, who]]);
+      hit = true; added = true;
+    }
     if (!hit) return { ok: false, error: 'notfound' };
-    addLog_(ss, no, 'participate', bid);
+    addLog_(ss, no, 'participate', bid + (added ? '（その場で追加）' : ''));
     SpreadsheetApp.flush();
-    return { ok: true, no: no, booth: bid, booths: readDetail_(ss, no) };
+    return { ok: true, no: no, booth: bid, added: added, booths: readDetail_(ss, no) };
   } finally {
     try { lock.releaseLock(); } catch (e2) { }
   }
@@ -876,6 +911,13 @@ function normalizeNo_(v) {
   return '';
 }
 
+/** 来場のみの登録かどうか（予約一覧の1行から判定。種別=visit か、予約ブース欄が「来場のみ」） */
+function isVisitOnly_(row) {
+  if (!row) return false;
+  if (String(row[R_TYPE - 1] || '') === TYPE_VISIT) return true;
+  return String(row[R_BOOTHS - 1] || '').trim() === VISIT_LABEL;
+}
+
 /** セルの先頭についてしまった「'」を取る */
 function stripQuote_(v) {
   var s = String(v === null || v === undefined ? '' : v);
@@ -983,6 +1025,105 @@ function buildMailHtml_(no, name, booths, cancelUrl, hasQr) {
     '</div></div></div>';
 }
 
+/** 来場のみの登録の確認メール（体験の一覧と集合のきまりは出しません） */
+function sendVisitMail_(no, name, email, token) {
+  var url = getWebAppUrl_();
+  var cancelUrl = url ? (url + '?action=cancel&no=' + encodeURIComponent(no) + '&token=' + encodeURIComponent(token)) : '';
+  var qrBlob = null;
+  try { qrBlob = makeQrBlob_(no, 8, 4); } catch (err) { qrBlob = null; }
+
+  var qrBlock = qrBlob
+    ? '<div style="text-align:center;margin:8px 0 4px;">' +
+      '<img src="cid:qrimg" width="232" height="232" alt="受付番号のQRコード" style="display:block;margin:0 auto;border:8px solid #FFFFFF;background:#FFFFFF;">' +
+      '</div>' +
+      '<p style="font-size:16px;line-height:1.8;margin:6px 0 0;text-align:center;">入口の受付で、このQRコードか受付番号をお見せください。</p>'
+    : '<p style="font-size:16px;line-height:1.8;margin:6px 0 0;text-align:center;">入口の受付で、上の受付番号をお伝えください。</p>';
+
+  var html = '' +
+    '<div style="margin:0;padding:0;background:#F4EFE4;">' +
+    '<div style="max-width:600px;margin:0 auto;padding:0 0 28px;background:#F4EFE4;font-family:\'Hiragino Sans\',\'Yu Gothic\',sans-serif;color:#33302B;">' +
+
+    '<div style="background:#F2B705;padding:20px 24px;">' +
+    '<div style="font-size:15px;letter-spacing:.08em;color:#5A4300;">' + esc_(EVENT.dateLabel) + ' ' + esc_(EVENT.time) + '</div>' +
+    '<div style="font-size:24px;font-weight:bold;margin-top:6px;color:#33302B;">' + esc_(EVENT.name) + '</div>' +
+    '</div>' +
+
+    '<div style="padding:24px;">' +
+    '<p style="font-size:19px;line-height:1.9;margin:0 0 18px;">' + esc_(name) + ' 様</p>' +
+    '<p style="font-size:17px;line-height:1.9;margin:0 0 22px;">来場登録を承りました。<br>当日お会いできるのを楽しみにしています。</p>' +
+
+    '<div style="background:#FFFFFF;border-radius:14px;padding:22px 20px;text-align:center;">' +
+    '<div style="font-size:15px;color:#7A7266;letter-spacing:.1em;">受付番号</div>' +
+    '<div style="font-size:40px;font-weight:bold;letter-spacing:.06em;margin:6px 0 16px;">' + esc_(no) + '</div>' +
+    qrBlock +
+    '</div>' +
+
+    '<h3 style="font-size:18px;margin:26px 0 10px;border-left:6px solid #F2B705;padding-left:10px;">当日の流れ</h3>' +
+    '<p style="font-size:17px;line-height:1.9;margin:0;">入口の受付でこのQRコードをお見せください。<br>' +
+    '空いているブースには、その場で入っていただけます（ご予約の方が先になります）。</p>' +
+
+    '<h3 style="font-size:18px;margin:26px 0 10px;border-left:6px solid #F2B705;padding-left:10px;">開催のご案内</h3>' +
+    '<table style="width:100%;border-collapse:collapse;background:#FFFFFF;border-radius:10px;font-size:17px;">' +
+    mailRow_('日にち', EVENT.dateLabel) +
+    mailRow_('時間', EVENT.time) +
+    mailRow_('会場', EVENT.venue) +
+    mailRow_('住所', EVENT.address) +
+    mailRow_('駐車場', EVENT.parking) +
+    mailRow_('参加費', EVENT.fee) +
+    '</table>' +
+
+    '<p style="font-size:17px;line-height:1.9;margin:22px 0 0;">体験はすべて無料です。無理な営業や勧誘はしませんので、どうぞ気軽にお越しください。</p>' +
+
+    (cancelUrl ?
+      '<p style="font-size:15px;line-height:1.9;margin:22px 0 0;color:#5C554B;">ご都合が悪くなった場合は、こちらから取り消せます。<br>' +
+      '<a href="' + esc_(cancelUrl) + '" style="color:#8A6B00;">予約をキャンセルする</a></p>' : '') +
+
+    '<div style="margin-top:26px;padding-top:18px;border-top:1px solid #E3DBC9;font-size:15px;line-height:1.9;color:#5C554B;">' +
+    esc_(EVENT.organizer) + '<br>' +
+    'お問い合わせ　' + esc_(EVENT.contact) +
+    '</div>' +
+
+    '</div></div></div>';
+
+  var lines = [];
+  lines.push(name + ' 様');
+  lines.push('');
+  lines.push('来場登録を承りました。');
+  lines.push('');
+  lines.push('受付番号： ' + no);
+  lines.push('');
+  lines.push('【当日の流れ】');
+  lines.push('入口の受付で、このメールのQRコードか受付番号をお見せください。');
+  lines.push('空いているブースには、その場で入っていただけます（ご予約の方が先になります）。');
+  lines.push('');
+  lines.push('【開催のご案内】');
+  lines.push('日にち： ' + EVENT.dateLabel);
+  lines.push('時間： ' + EVENT.time);
+  lines.push('会場： ' + EVENT.venue);
+  lines.push('住所： ' + EVENT.address);
+  lines.push('駐車場： ' + EVENT.parking);
+  lines.push('参加費： ' + EVENT.fee);
+  lines.push('');
+  lines.push('体験はすべて無料です。無理な営業や勧誘はしません。');
+  if (cancelUrl) {
+    lines.push('');
+    lines.push('取り消しはこちら： ' + cancelUrl);
+  }
+  lines.push('');
+  lines.push(EVENT.organizer);
+  lines.push('お問い合わせ　' + EVENT.contact);
+
+  var opts = {
+    to: email,
+    subject: '【北中城フェスタ】来場登録を承りました（受付番号 ' + no + '）',
+    htmlBody: html,
+    body: lines.join('\n'),
+    name: 'ゆいどころ（北中城フェスタ受付）'
+  };
+  if (qrBlob) opts.inlineImages = { qrimg: qrBlob };
+  MailApp.sendEmail(opts);
+}
+
 function mailRow_(label, value) {
   return '<tr>' +
     '<td style="padding:10px 12px;border-bottom:1px solid #E3DBC9;white-space:nowrap;color:#7A7266;">' + esc_(label) + '</td>' +
@@ -1041,6 +1182,8 @@ function sendCheckinMail_(no, name, email, booths, at) {
       '</td></tr>';
     text.push('・' + b.name + (b.time ? '　' + b.time : '') + (b.who ? '　受ける人：' + b.who : '') + '　' + meetRule_(b.id));
   }
+  /* 来場のみの方（予約した体験がない）＝体験の一覧と集合のきまりは出しません */
+  if (booths.length === 0) return sendCheckinVisitMail_(no, name, email, at);
   var html = pageShell_('受付しました',
     '<div style="text-align:center;padding:6px 0 14px;">' +
     '<div style="display:inline-block;width:64px;height:64px;border-radius:50%;background:#468977;color:#fff;font-size:40px;line-height:64px;">✓</div>' +
@@ -1053,20 +1196,39 @@ function sendCheckinMail_(no, name, email, booths, at) {
   MailApp.sendEmail({ to: email, subject: '【' + EVENT.name + '】受付しました（予約番号 ' + no + '）', body: plain, htmlBody: html, name: 'ゆいどころ（北中城フェスタ受付）' });
 }
 
+/** 来場のみの方の「受付しました」メール（体験の一覧・集合のきまりは出しません） */
+function sendCheckinVisitMail_(no, name, email, at) {
+  var html = pageShell_('受付しました',
+    '<div style="text-align:center;padding:6px 0 14px;">' +
+    '<div style="display:inline-block;width:64px;height:64px;border-radius:50%;background:#468977;color:#fff;font-size:40px;line-height:64px;">✓</div>' +
+    '<h1 style="font-size:24px;margin:12px 0 4px;color:#2F6B5A;">受付しました</h1>' +
+    '<p style="font-size:16px;margin:0;color:#555;">' + esc_(name) + ' 様　受付番号 <strong>' + esc_(no) + '</strong>　' + esc_(at) + '</p></div>' +
+    '<p style="font-size:16px;line-height:1.8;margin:0 0 10px;">ようこそ。空いているブースには、その場で入っていただけます（ご予約の方が先になります）。</p>' +
+    '<p style="font-size:14px;line-height:1.8;color:#555;margin:14px 0 0;">どのブースが空いているかは、会場のスタッフにお気軽にお尋ねください。</p>');
+  var plain = ['受付しました', name + ' 様　受付番号 ' + no + '　' + at, '',
+    '空いているブースには、その場で入っていただけます（ご予約の方が先になります）。',
+    'どのブースが空いているかは、会場のスタッフにお気軽にお尋ねください。', '', EVENT.organizer].join('\n');
+  MailApp.sendEmail({ to: email, subject: '【' + EVENT.name + '】受付しました（受付番号 ' + no + '）', body: plain, htmlBody: html, name: 'ゆいどころ（北中城フェスタ受付）' });
+}
+
 /** キャンセルの確認ページ（「本当にキャンセルしますか？」） */
-function confirmCancelHtml_(no, name, booths, token) {
+function confirmCancelHtml_(no, name, booths, token, visitOnly) {
   var url = getWebAppUrl_() + '?action=cancel&no=' + encodeURIComponent(no) + '&token=' + encodeURIComponent(token) + '&confirm=1';
   var list = '';
   for (var i = 0; i < booths.length; i++) {
     list += '<li style="margin:4px 0;">' + esc_(booths[i].name) + (booths[i].time ? '　<span style="color:#666;font-size:15px;">' + esc_(booths[i].time) + '</span>' : '') + '</li>';
   }
-  return pageShell_('予約のキャンセル',
-    '<h1 style="font-size:22px;margin:0 0 14px;color:#2F6B5A;">本当にキャンセルしますか？</h1>' +
-    '<p style="font-size:17px;margin:0 0 6px;">予約番号　<strong>' + esc_(no) + '</strong>　' + esc_(name) + ' 様</p>' +
+  return pageShell_(visitOnly ? '来場登録の取り消し' : '予約のキャンセル',
+    '<h1 style="font-size:22px;margin:0 0 14px;color:#2F6B5A;">' + (visitOnly ? '本当に取り消しますか？' : '本当にキャンセルしますか？') + '</h1>' +
+    '<p style="font-size:17px;margin:0 0 6px;">' + (visitOnly ? '受付番号' : '予約番号') + '　<strong>' + esc_(no) + '</strong>　' + esc_(name) + ' 様</p>' +
+    (visitOnly ? '<p style="font-size:17px;margin:0 0 12px;">来場登録（体験の予約なし）</p>' : '') +
     (list ? '<ul style="font-size:17px;line-height:1.7;margin:0 0 16px;padding-left:22px;">' + list + '</ul>' : '') +
-    '<p style="font-size:16px;line-height:1.8;color:#555;margin:0 0 18px;">キャンセルすると枠がほかの方に回ります。もとに戻すには、もう一度予約が必要です。</p>' +
-    '<a href="' + url + '" style="display:block;text-align:center;background:#B3281E;color:#fff;font-size:18px;font-weight:bold;padding:16px;border-radius:14px;text-decoration:none;margin-bottom:12px;">キャンセルする</a>' +
-    '<a href="' + esc_(EVENT.siteUrl || 'https://yuidocoro-wq.github.io/kitanaka-festa-2026/') + '" style="display:block;text-align:center;background:#fff;color:#2F6B5A;border:2px solid #468977;font-size:18px;font-weight:bold;padding:14px;border-radius:14px;text-decoration:none;">やめる（予約はそのまま）</a>');
+    '<p style="font-size:16px;line-height:1.8;color:#555;margin:0 0 18px;">' +
+    (visitOnly
+      ? '取り消したあとも、当日そのままお越しいただけます。そのときは入口で紙にご記入をお願いします。'
+      : 'キャンセルすると枠がほかの方に回ります。もとに戻すには、もう一度予約が必要です。') + '</p>' +
+    '<a href="' + url + '" style="display:block;text-align:center;background:#B3281E;color:#fff;font-size:18px;font-weight:bold;padding:16px;border-radius:14px;text-decoration:none;margin-bottom:12px;">' + (visitOnly ? '取り消す' : 'キャンセルする') + '</a>' +
+    '<a href="' + esc_(EVENT.siteUrl || 'https://yuidocoro-wq.github.io/kitanaka-festa-2026/') + '" style="display:block;text-align:center;background:#fff;color:#2F6B5A;border:2px solid #468977;font-size:18px;font-weight:bold;padding:14px;border-radius:14px;text-decoration:none;">' + (visitOnly ? 'やめる（登録はそのまま）' : 'やめる（予約はそのまま）') + '</a>');
 }
 
 function pageShell_(title, inner) {

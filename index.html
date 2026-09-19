@@ -4,9 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>北中城村ウェルネススポーツフェスタ2026｜体験の予約</title>
-<meta name="description" content="2026年12月13日（日）北中城村中央公民館ホール。入場・体験は無料です。気になるブースの体験をこのページから予約できます。">
+<meta name="description" content="2026年12月13日（日）北中城村中央公民館ホール。入場・体験は無料です。はいはい期の赤ちゃんから小学校低学年のお子さまと、おうちの方が主役の一日。気になる体験はこのページから予約できます。会場に入る方は、来場登録をお願いしています。">
 <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700&family=M+PLUS+1p:wght@400;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=20260917a">
+<link rel="stylesheet" href="style.css?v=20260920a">
 </head>
 <body>
 
@@ -28,6 +28,14 @@
     <h1>体験の予約</h1>
     <p class="date" id="hero-date"></p>
     <p><span class="free" id="hero-free"></span></p>
+
+    <!-- 来場登録の入口（9/19 観光協会との打合せ：会場に入る方は全員、受付で名簿をとります） -->
+    <section class="visit-entry" aria-labelledby="visit-entry-t">
+      <p class="visit-entry-t" id="visit-entry-t">会場に入る方は、みなさん受付をお願いしています</p>
+      <p class="visit-entry-b">イベントの保険に登録するため、当日いらっしゃる方のお名前を、前もってうかがっています。<br>体験を予約された方は、それで登録ずみです（あらためての来場登録はいりません）。</p>
+      <a class="btn btn-visit" href="reserve.html?mode=visit">体験の予約をしない方の来場登録</a>
+    </section>
+
     <div class="who" id="who" aria-label="だれが参加するかでえらぶ">
       <p class="who-t">年齢別おすすめ体験　<span class="who-hint">押すと、その年齢向けの体験だけが並びます</span></p>
       <div class="who-btns">
@@ -46,7 +54,7 @@
       <a class="big" href="#exhibitors"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20c0-3.5 2.5-6 6-6s6 2.5 6 6M15 20c0-2.5 1.5-4.5 4-4.5s3 1.5 3 4.5"/></svg><span class="kana">出展者</span><span class="sub">出展するみなさんの紹介</span></a>
       <a class="big" href="#access"><svg viewBox="0 0 24 24"><path d="M12 21s-6-5.5-6-11a6 6 0 0 1 12 0c0 5.5-6 11-6 11z"/><circle cx="12" cy="10" r="2.2"/></svg><span class="kana">アクセス</span><span class="sub">会場・駐車場・地図</span></a>
     </nav>
-    <p class="lead">気になるブースは、このページから予約できます。<br>予約がなくても、当日そのまま来ていただけます。</p>
+    <p class="lead">はいはい期の赤ちゃんから小学校低学年のお子さまと、おうちの方が主役の一日です。<br>気になるブースは、このページから予約できます。</p>
   </div>
 </div>
 
@@ -59,7 +67,7 @@
       <div class="card">
         <ul class="info-list" id="info-list"></ul>
       </div>
-      <p class="muted">お子さん連れでも、おじいちゃん・おばあちゃんでも、ゆっくり過ごしていただけるようにしています。</p>
+      <p class="muted">中学生以上の方も、おじいちゃん・おばあちゃんも、ゆっくり過ごしていただけるようにしています。</p>
     </div>
   </section>
 
@@ -132,9 +140,9 @@
   </div>
 </div>
 
-<script src="config.js?v=20260917a"></script>
-<script src="booths.js?v=20260917a"></script>
-<script src="app.js?v=20260917a"></script>
+<script src="config.js?v=20260920a"></script>
+<script src="booths.js?v=20260920a"></script>
+<script src="app.js?v=20260920a"></script>
 <script>
 (function () {
   "use strict";
@@ -152,14 +160,17 @@
       return '<li><span class="k">' + esc(r[0]) + '</span><span class="v">' + r[1] + "</span></li>";
     }).join("");
   }
-  rows(F.$("#info-list"), [
+  var infoRows = [
     ["日にち", esc(E.dateLabel)],
     ["時間", esc(E.time)],
     ["会場", esc(E.venue)],
     ["参加費", esc(E.fee)],
-    ["駐車場", esc(E.parking)],
-    ["主催・運営", esc(E.organizer).split("／").join("<br>")]
-  ]);
+    ["駐車場", esc(E.parking)]
+  ];
+  if (E.audience) infoRows.push(["主な対象", esc(E.audience)]);
+  infoRows.push(["受付", "会場に入る方は、みなさん受付をお願いしています（体験を予約された方は登録ずみです）"]);
+  infoRows.push(["主催・運営", esc(E.organizer).split("／").join("<br>")]);
+  rows(F.$("#info-list"), infoRows);
 
   /* ---------- ② ブース一覧 ---------- */
   

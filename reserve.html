@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>体験の予約｜北中城村ウェルネススポーツフェスタ2026</title>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700&family=M+PLUS+1p:wght@400;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=20260917a">
+<link rel="stylesheet" href="style.css?v=20260920a">
 </head>
 <body>
 
@@ -27,7 +27,7 @@
 
     <!-- 予約フォーム -->
     <section id="form-area">
-      <h2><span class="bar"></span>予約フォーム</h2>
+      <h2 id="form-title"><span class="bar"></span>予約フォーム</h2>
 
       <div class="card" id="booth-head"></div>
 
@@ -37,7 +37,7 @@
 
         <div class="field" id="field-people">
           <label><span class="stepno">1</span>参加する人（全員）<span class="req">必須</span></label>
-          <p class="hint">保険の登録のため、いっしょに来る方を全員ご記入ください（お子さんも）。</p>
+          <p class="hint" id="people-hint">保険の登録のため、いっしょに来る方を全員ご記入ください（お子さまも）。</p>
           <div id="people-list"></div>
           <button type="button" class="btn btn-line" id="add-person">＋ 人を追加する</button>
         </div>
@@ -55,13 +55,13 @@
 
         <div class="field">
           <label for="f-email">メールアドレス<span class="req">必須</span></label>
-          <p class="hint">予約番号のついたメールが届きます。</p>
+          <p class="hint" id="email-hint">予約番号のついたメールが届きます。</p>
           <input type="email" id="f-email" name="email" autocomplete="email" inputmode="email" required>
         </div>
 
         <div class="field" id="field-childage" hidden>
-          <label for="f-childage">お子さんの月齢・年齢</label>
-          <p class="hint">1歳以下のお子さんは、生年月日から開催日（12月13日）時点の月齢が自動で入ります。ちがうときは書き直してください。</p>
+          <label for="f-childage">お子さまの月齢・年齢</label>
+          <p class="hint">1歳以下のお子さまは、生年月日から開催日（12月13日）時点の月齢が自動で入ります。ちがうときは書き直してください。</p>
           <input type="text" id="f-childage" name="childAge" data-auto="1">
         </div>
 
@@ -82,7 +82,7 @@
             <input type="checkbox" id="f-agree">
             <span class="t">
               <b>確認メールを受け取ることに同意します</b>
-              <span>予約番号のついたメールをお送りします。お名前・生年月日・住所・連絡先は、イベント保険の登録とこのイベントの連絡だけに使います。</span>
+              <span id="agree-note">予約番号のついたメールをお送りします。お名前・生年月日・住所・連絡先は、イベント保険の登録とこのイベントの連絡だけに使います。</span>
             </span>
           </label>
         </div>
@@ -105,13 +105,13 @@
     <section id="done-area" hidden>
       <div class="splash">
         <svg viewBox="0 0 80 80" width="88" height="88" aria-hidden="true"><circle cx="40" cy="40" r="36" fill="#468977"/><path d="M22 41l12 12 24-26" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        <p class="splash-t">ご予約を承りました！</p>
-        <p class="splash-s">確認メールをお送りしました。当日お会いできるのを楽しみにしています。</p>
+        <p class="splash-t" id="t-splash-t">ご予約を承りました！</p>
+        <p class="splash-s" id="t-splash-s">確認メールをお送りしました。当日お会いできるのを楽しみにしています。</p>
       </div>
 
       <div class="ticket">
         <div class="ticket-head">
-          <p class="ttl">予約番号</p>
+          <p class="ttl" id="t-no-label">予約番号</p>
           <span class="ticket-no" id="t-no"></span>
         </div>
         <hr class="ticket-cut">
@@ -119,9 +119,10 @@
           <div class="row"><span class="k">お名前</span><span id="t-name"></span></div>
           <div class="row"><span class="k">日にち</span><span id="t-date"></span></div>
           <div class="row"><span class="k">会場</span><span id="t-venue"></span></div>
-          <div class="row"><span class="k">体験</span><span id="t-booths"></span></div>
-          <div class="row"><span class="k">集合</span><span id="t-meet"></span></div>
+          <div class="row" id="t-row-booths"><span class="k">体験</span><span id="t-booths"></span></div>
+          <div class="row" id="t-row-meet"><span class="k">集合</span><span id="t-meet"></span></div>
         </div>
+        <p class="small" id="t-qr-note" hidden style="margin:10px 14px 0;">受付でお見せいただくQRコードは、確認メールに入っています。</p>
       </div>
 
       <div class="msg msg-ok" id="t-mail"></div>
@@ -129,17 +130,17 @@
       <div class="card">
         <h3>当日の流れ</h3>
         <ol class="steps">
-          <li>会場に着いたら、まず受付にお越しください。</li>
-          <li>受付で、この予約番号（またはメールのQR）をお見せください。</li>
+          <li id="step-arrive">会場に着いたら、まず受付にお越しください。</li>
+          <li id="step-show">受付で、この予約番号（またはメールのQR）をお見せください。</li>
           <li id="step-meet">時間になったら、ブースへお集まりください。</li>
         </ol>
       </div>
 
       <div class="card no-print">
         <a class="btn btn-sub" id="t-map" href="#" target="_blank" rel="noopener">会場の地図を開く</a>
-        <a class="btn btn-quiet" href="index.html#booths">ほかの体験も予約する</a>
-        <p class="small">ほかの体験も予約したいときは、上のボタンからもう一度お申し込みください（お名前などは、このスマホに覚えています）。予約番号は体験ごとに1つずつ届きます。</p>
-        <p class="small">キャンセルは、確認メールの「予約をキャンセルする」を押してください。「本当にキャンセルしますか？」→「キャンセルする」で完了します（お電話はいりません）。内容を変えたいときは、いちどキャンセルしてから予約し直してください。</p>
+        <a class="btn btn-quiet" id="t-more" href="index.html#booths">ほかの体験も予約する</a>
+        <p class="small" id="t-more-note">ほかの体験も予約したいときは、上のボタンからもう一度お申し込みください（お名前などは、このスマホに覚えています）。予約番号は体験ごとに1つずつ届きます。</p>
+        <p class="small" id="t-cancel-note">キャンセルは、確認メールの「予約をキャンセルする」を押してください。「本当にキャンセルしますか？」→「キャンセルする」で完了します（お電話はいりません）。内容を変えたいときは、いちどキャンセルしてから予約し直してください。</p>
         <p class="small">わからないことは <span id="t-contact"></span> まで。</p>
       </div>
     </section>
@@ -155,9 +156,9 @@
   </div>
 </footer>
 
-<script src="config.js?v=20260917a"></script>
-<script src="booths.js?v=20260917a"></script>
-<script src="app.js?v=20260917a"></script>
+<script src="config.js?v=20260920a"></script>
+<script src="booths.js?v=20260920a"></script>
+<script src="app.js?v=20260920a"></script>
 <script>
 (function () {
   "use strict";
@@ -165,16 +166,34 @@
 
   F.showDemoBar("テスト表示中です（送信しても、本当の予約にはなりません）");
 
-  var mainId = F.qs("booth");
+  /* 来場のみモード（reserve.html?mode=visit）：体験をえらばず、来る方の名簿だけをいただく */
+  var visitMode = (F.qs("mode") === "visit");
+
+  var mainId = visitMode ? "" : F.qs("booth");
   var mainBooth = F.booth(mainId);
   if (mainBooth && !mainBooth.reserve) mainBooth = null;
   /* 時間（部）をえらぶタイプ（足もみ・運動あそび）：本体は枠のほうを予約する */
   var groupBooth = (mainBooth && mainBooth.slots) ? mainBooth : null;
   if (groupBooth) mainBooth = null;
+  if (visitMode) { mainBooth = null; groupBooth = null; }
 
   /* ---------- 上の見出し（ブース名・時間・対象・注意） ---------- */
   var head = F.$("#booth-head");
-  if (groupBooth) {
+  if (visitMode) {
+    document.title = "来場登録｜北中城村ウェルネススポーツフェスタ2026";
+    F.$(".wm-sub").textContent = "来場登録";
+    F.$("#form-title").innerHTML = '<span class="bar"></span>来場登録';
+    head.innerHTML = "<h3>来場登録（体験の予約はしません）</h3>" +
+      '<p class="muted">会場に入る方は、みなさん受付をお願いしています。イベントの保険に登録するため、当日いらっしゃる方のお名前を、前もってうかがっています。</p>' +
+      '<p class="muted">空いているブースには、当日その場で入っていただけます（ご予約の方が先になります）。</p>';
+    head.className = "card visit-head";
+    F.$("#people-hint").textContent = "保険の登録のため、いっしょに来る方を全員ご記入ください（お子さまも）。";
+    F.$("#email-hint").textContent = "受付番号のついたメールが届きます。";
+    F.$("#agree-note").textContent = "受付番号のついたメールをお送りします。お名前・生年月日・住所・連絡先は、イベント保険の登録とこのイベントの連絡だけに使います。";
+    F.$("#field-other").hidden = true;
+    F.$("#field-more").hidden = true;
+    F.$("#field-childage").hidden = true;
+  } else if (groupBooth) {
     var gp = F.provisionalNote(groupBooth), gh = [];
     gh.push("<h3>" + esc(groupBooth.name) + (gp ? '<span class="tag-provisional">' + esc(gp) + "</span>" : "") + "</h3>");
     gh.push("<dl>");
@@ -217,7 +236,7 @@
       '<div class="field" style="margin-bottom:10px;"><label>お名前</label><input type="text" class="p-name" autocomplete="name"></div>' +
       '<div class="field" style="margin-bottom:10px;"><label>生年月日</label><input type="text" class="p-birth" inputmode="numeric" placeholder="例：1985/4/1"></div>' +
       '<div class="field" style="margin-bottom:10px;"><label>大人・子ども</label><select class="p-kind"><option value="大人">大人</option><option value="子ども">子ども（中学生まで）</option></select></div>' +
-      '<div class="p-booths"><p class="small" style="margin:0 0 4px;font-weight:700;">この方が受ける体験（チェック）</p><div class="p-booth-list"></div></div>' +
+      (visitMode ? "" : '<div class="p-booths"><p class="small" style="margin:0 0 4px;font-weight:700;">この方が受ける体験（チェック）</p><div class="p-booth-list"></div></div>') +
       (i > 0 ? '<button type="button" class="btn btn-quiet p-del" style="min-height:40px;margin:6px 0 0;">この行を消す</button>' : "") +
       "</div>";
   }
@@ -231,9 +250,11 @@
   }
   function boothLabel(b) { var g = b.group ? F.booth(b.group) : null; return (g ? g.name + "　" + b.short : b.name) + (b.time && !b.group ? "（" + b.time + "）" : ""); }
   function renderPersonBooths() {
+    if (visitMode) return;   /* 来場のみのときは「受ける体験」のチェックを出さない */
     var list = chosenBoothObjs();
     F.$$("[data-person]").forEach(function (row, idx) {
       var box = row.querySelector(".p-booth-list");
+      if (!box) return;
       var prev = {}; F.$$("input", box).forEach(function (i) { prev[i.value] = i.checked; });
       if (!list.length) { box.innerHTML = '<p class="small" style="margin:0;">体験をえらぶと、ここに出ます。</p>'; return; }
       box.innerHTML = list.map(function (b) {
@@ -436,6 +457,8 @@
   /* ---------- 送信 ---------- */
   var msgArea = F.$("#msg-area");
   var btn = F.$("#submit-btn");
+  var SUBMIT_LABEL = visitMode ? "この内容で来場登録する" : "この内容で予約する";
+  btn.textContent = SUBMIT_LABEL;
 
   function showMsg(kind, text) {
     msgArea.innerHTML = '<div class="msg msg-' + kind + '">' + esc(text) + "</div>";
@@ -484,7 +507,7 @@
     if (!address) { showMsg("err", "住所をご記入ください。保険の登録に使います。"); F.$("#f-address").focus(); return; }
     if (!phone) { showMsg("err", "電話番号をご記入ください。当日のご連絡に使います。"); F.$("#f-phone").focus(); return; }
     if (!email || email.indexOf("@") < 1) { showMsg("err", "メールアドレスをご確認ください。確認メールのお届け先になります。"); F.$("#f-email").focus(); return; }
-    if (!ids.length) { showMsg("err", groupBooth ? "時間（部）を1つえらんでください。" : "予約したい体験を1つ以上お選びください。"); return; }
+    if (!visitMode && !ids.length) { showMsg("err", groupBooth ? "時間（部）を1つえらんでください。" : "予約したい体験を1つ以上お選びください。"); return; }
     if (!F.$("#f-agree").checked) { showMsg("err", "「確認メールを受け取ることに同意します」にチェックをお願いします。"); return; }
 
     var payload = {
@@ -500,11 +523,12 @@
       children: childrenN,
       people: people,
       childAge: childAgeField.hidden ? "" : F.$("#f-childage").value.trim(),
-      booths: ids,
+      booths: visitMode ? [] : ids,
       count: raceMain ? 1 : Math.max(1, joinN),
       counts: countsBy,
       note: F.$("#f-note").value.trim()
     };
+    if (visitMode) payload.visitOnly = true;   /* 体験なし＝来場のみの印 */
 
     btn.disabled = true;
     btn.textContent = "送っています…";
@@ -533,13 +557,13 @@
       } else {
         F.$("#sending").hidden = true;
         btn.disabled = false;
-        btn.textContent = "この内容で予約する";
+        btn.textContent = SUBMIT_LABEL;
         showMsg("err", F.friendlyError(j && j.error, j && j.full));
       }
     }).catch(function () {
       F.$("#sending").hidden = true;
       btn.disabled = false;
-      btn.textContent = "この内容で予約する";
+      btn.textContent = SUBMIT_LABEL;
       showMsg("err", F.friendlyError("network"));
     });
   });
@@ -555,6 +579,34 @@
 
     F.$("#t-no").textContent = no;
     F.$("#t-name").textContent = name + " 様" + (people.length > 1 ? "（ほか" + (people.length - 1) + "名）" : "");
+
+    /* ---- 来場のみの完了画面（体験の一覧と集合のきまりは出さない） ---- */
+    if (visitMode) {
+      F.$("#t-splash-t").textContent = "来場登録を承りました！";
+      F.$("#t-splash-s").textContent = "確認メールをお送りしました。当日お会いできるのを楽しみにしています。";
+      F.$("#t-no-label").textContent = "受付番号";
+      F.$("#t-row-booths").hidden = true;
+      F.$("#t-row-meet").hidden = true;
+      F.$("#t-date").textContent = E.dateLabel + "　" + E.time;
+      F.$("#t-venue").textContent = E.venue;
+      F.$("#step-arrive").textContent = "会場に着いたら、まず入口の受付にお越しください。";
+      F.$("#step-show").textContent = "受付で、この受付番号（またはメールのQRコード）をお見せください。";
+      F.$("#t-qr-note").hidden = false;
+      F.$("#step-meet").innerHTML = "<span class='step-body'>空いているブースには、その場で入っていただけます。<br><span class='small'>ご予約の方が先になります。どのブースが空いているかは、会場のスタッフにお尋ねください。</span></span>";
+      F.$("#t-more").textContent = "体験も予約する（ブース一覧を見る）";
+      F.$("#t-more-note").textContent = "気になる体験が出てきたら、上のボタンから予約できます。そのときは体験の予約番号が新しく届きますので、当日の受付ではその番号をお見せください。";
+      F.$("#t-cancel-note").textContent = "取り消しは、確認メールの「予約をキャンセルする」を押してください。「本当に取り消しますか？」→「取り消す」で完了します（お電話はいりません）。";
+      F.$("#t-mail").textContent = demo
+        ? "これはテスト表示です。本番ではここに「確認メールをお送りしました」と出ます。"
+        : "確認メールをお送りしました。届かないときは、迷惑メールフォルダもご覧ください。";
+      F.$("#t-map").href = F.mapUrl();
+      F.$("#t-contact").textContent = E.contact;
+      if (!demo) F.saveLastNo(no);
+      window.scrollTo(0, 0);
+      window.setTimeout(function () { window.scrollTo(0, 0); }, 50);
+      return;
+    }
+
     var meets = [];
     booths.forEach(function (b) { var fb = F.booth(b.id); var g = fb && fb.group ? F.booth(fb.group) : null; var m = (fb && fb.meet) || (g && g.meet); if (m && meets.indexOf(m) < 0) meets.push(m); });
     F.$("#t-meet").textContent = meets.join("／") || "開始5分前にブースへお集まりください";
@@ -564,7 +616,8 @@
       var m = (fb && fb.meet) || (g && g.meet) || "開始5分前にブースへお越しください";
       return "「" + esc(b.name || (fb ? fb.name : b.id)) + "」…" + esc(m.split("。")[0]);
     });
-    F.$("#step-meet").innerHTML = "時間になったら、ブースへお集まりください。<br>" + lines.join("<br>") + "<br><span class='small'>時間までに来られない場合は、当日枠の方にお譲りします。</span>";
+    /* step-body で1つにまとめる（.steps li は横並びなので、まとめないと右に押し出されます） */
+    F.$("#step-meet").innerHTML = "<span class='step-body'>時間になったら、ブースへお集まりください。<br>" + lines.join("<br>") + "<br><span class='small'>時間までに来られない場合は、当日枠の方にお譲りします。</span></span>";
     F.$("#t-date").textContent = E.dateLabel + "　" + E.time;
     F.$("#t-venue").textContent = E.venue;
     F.$("#t-booths").innerHTML = booths.map(function (b) {

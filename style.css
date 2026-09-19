@@ -764,3 +764,24 @@ h1,h2,h3{ text-wrap:balance; }
 .to-top.is-on{ display:flex; }
 .to-top svg{ width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:2.2; stroke-linecap:round; stroke-linejoin:round; }
 @media print{ .to-top{ display:none !important; } }
+
+/* ---------- 来場登録の入口（2026-09-20 会場に入る方はみなさん受付） ----------
+   体験予約の入口より目立たせない：黄色の主ボタンは使わず、白地＋緑の細い枠で小さく */
+.visit-entry{
+  margin:14px 0 6px;
+  padding:14px 14px 4px;
+  background:var(--paper);
+  border:2px dashed var(--green);
+  border-radius:var(--radius);
+  text-align:left;
+}
+.visit-entry-t{ margin:0 0 6px; font-weight:700; font-size:17px; color:var(--green-deep); line-height:1.5; }
+.visit-entry-b{ margin:0 0 10px; font-size:15px; color:var(--ink-soft); line-height:1.7; }
+.btn-visit{ background:#fff; color:var(--green-deep); border-color:var(--green); min-height:50px; font-size:17px; }
+.btn-visit:active{ background:var(--tint); }
+
+/* 来場登録フォーム（reserve.html?mode=visit）の上の説明 */
+.visit-head{ border-color:var(--green) !important; }
+.visit-head h3{ color:var(--green-deep); }
+/* 当日の流れの3番：本文を1つのかたまりにする（.steps li は横並びのため）2026-09-20 */
+.steps li .step-body{ flex:1 1 auto; min-width:0; }

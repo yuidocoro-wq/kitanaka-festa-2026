@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>当日受付｜北中城村ウェルネススポーツフェスタ2026</title>
 <meta name="robots" content="noindex">
-<link rel="stylesheet" href="style.css?v=20260917a">
+<link rel="stylesheet" href="style.css?v=20260920a">
 </head>
 <body class="checkin-body">
 
@@ -62,6 +62,7 @@
         <p><span class="badge-big" id="r-badge"></span></p>
         <p class="muted" id="r-count"></p>
         <div id="r-booths"></div>
+        <div id="r-spot" hidden style="margin-top:12px;"></div>
         <div id="r-actions" style="margin-top:16px;"></div>
       </div>
 
@@ -90,10 +91,10 @@
   </div>
 </main>
 
-<script src="jsQR.js?v=20260917a"></script>
-<script src="config.js?v=20260917a"></script>
-<script src="booths.js?v=20260917a"></script>
-<script src="app.js?v=20260917a"></script>
+<script src="jsQR.js?v=20260920a"></script>
+<script src="config.js?v=20260920a"></script>
+<script src="booths.js?v=20260920a"></script>
+<script src="app.js?v=20260920a"></script>
 <script>
 (function () {
   "use strict";
@@ -274,11 +275,14 @@
     F.$("#result-card").hidden = true;
 
     if (F.isDemo()) {
+      /* テスト表示のときだけ：KF-0002 を入れると「来場のみ」の方の見本が出ます（練習用） */
+      var demoVisit = (no === "KF-0002");
       window.setTimeout(function () {
         F.$("#desk-msg").innerHTML = "";
         showPerson({
           no: no, name: "（テスト表示）お名前", kana: "", adults: 2, children: 1,
-          booths: [{ id: "haihai", name: "ハイハイレース", time: "10:50〜11:20" }],
+          booths: demoVisit ? [] : [{ id: "haihai", name: "ハイハイレース", time: "10:50〜11:20" }],
+          visitOnly: demoVisit,
           checkedIn: false
         });
       }, 300);
@@ -323,7 +327,10 @@
     }
 
     var bs = p.booths || [];
-    F.$("#r-booths").innerHTML = bs.length
+    /* 来場のみの登録（体験の予約なし）＝受付係が visitOnly／種別 visit を返します */
+    var visitOnly = (p.visitOnly === true) || (String(p.type || "") === "visit");
+    var visitLine = '<div class="booth-line"><b>来場のみ</b>　空いているブースへご案内してください</div>';
+    F.$("#r-booths").innerHTML = (visitOnly ? visitLine : "") + (bs.length
       ? bs.map(function (b) {
           var full = F.booth(b.id);
           var time = b.time || (full ? full.time : "");
@@ -335,7 +342,23 @@
                   : '　<button type="button" class="btn btn-line" style="display:inline-flex;width:auto;min-height:40px;padding:6px 12px;font-size:15px;margin:0;" data-part="' + esc(b.id) + '" data-no="' + esc(p.no) + '">体験おわり</button>') +
             "</div>";
         }).join("")
-      : '<div class="booth-line">予約ブースなし</div>';
+      : (visitOnly ? "" : '<div class="booth-line">予約ブースなし</div>'));
+
+    /* 来場のみの方が、その場で空いているブースに入ったときの記録 */
+    var spot = F.$("#r-spot");
+    if (visitOnly) {
+      var list = F.DATA.booths.filter(function (b) { return !b.slots; });
+      spot.hidden = false;
+      spot.innerHTML = '<p class="small" style="margin:0 0 6px;font-weight:700;">その場で入ったブースを記録する（任意）</p>' +
+        '<select id="spot-booth" style="width:100%;min-height:48px;font-size:16px;font-family:inherit;margin-bottom:8px;">' +
+        list.map(function (b) { return '<option value="' + esc(b.id) + '">' + esc(b.name) + "</option>"; }).join("") +
+        "</select>" +
+        '<button type="button" class="btn btn-line" id="spot-btn" style="margin-bottom:0;">このブースに入った</button>';
+      F.$("#spot-btn").addEventListener("click", function () { spotJoin(p.no, this); });
+    } else {
+      spot.hidden = true;
+      spot.innerHTML = "";
+    }
 
     var act = F.$("#r-actions");
     act.innerHTML = "";
@@ -355,6 +378,33 @@
     act.appendChild(b2);
 
     F.$("#result-card").scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  /* 予約していないブースに、その場で入ったことを記録する（来場のみの方むけ） */
+  function spotJoin(no, btn) {
+    var sel = F.$("#spot-booth");
+    if (!sel || !sel.value) return;
+    var b = F.booth(sel.value);
+    btn.disabled = true; btn.textContent = "記録しています…";
+    var finish = function (ok, msg) {
+      btn.disabled = false; btn.textContent = "このブースに入った";
+      box(F.$("#desk-msg"), ok ? "ok" : "err", msg);
+    };
+    if (F.isDemo()) {
+      window.setTimeout(function () {
+        F.$("#r-booths").insertAdjacentHTML("beforeend", '<div class="booth-line">' + esc(b ? b.name : sel.value) + '　<span class="badge-big badge-done" style="font-size:15px;padding:2px 10px;">参加済み（テスト）</span></div>');
+        finish(true, "記録しました（テスト）。");
+      }, 300);
+      return;
+    }
+    F.postGas({ action: "participate", no: no, booth: sel.value, add: true, pin: PIN, boothName: b ? b.name : "", boothTime: b ? b.time : "" })
+      .then(function (j) {
+        if (j && j.ok) {
+          F.$("#r-booths").insertAdjacentHTML("beforeend", '<div class="booth-line">' + esc(b ? b.name : sel.value) + '　<span class="badge-big badge-done" style="font-size:15px;padding:2px 10px;">参加済み</span></div>');
+          finish(true, "「" + (b ? b.name : sel.value) + "」に入ったことを記録しました。");
+        } else finish(false, F.friendlyError(j && j.error));
+      })
+      .catch(function () { finish(false, F.friendlyError("network")); });
   }
 
   function doCheckin(no, btn) {
