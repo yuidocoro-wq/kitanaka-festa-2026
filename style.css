@@ -650,7 +650,7 @@ input:focus, select:focus, textarea:focus{ outline-color:var(--green); border-co
 
 /* ③ 白に近い薄緑（#EAF3EF・#F4F8F6）を1つの --tint に。役割は「面の下敷き」で同じ */
 #hero-date, .remain.ok, .gnav a:hover, .gnav a:focus, .big:active, .big:hover, .splash,
-.crumb, footer.site-foot, .p-booths, #booth-chair { background:var(--tint); }
+.crumb, footer.site-foot, .p-booths { background:var(--tint); }
 .remain.ok{ border-color:var(--green-deep); color:var(--green-deep); }
 /* 注意書き（足もみの禁忌）は役割色＝橙の下敷きを残し、白との差だけ広げる */
 .booth .caution, #booth-ashimomi > p.caution{ background:#FFE9C2; }
