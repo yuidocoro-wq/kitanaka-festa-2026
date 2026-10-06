@@ -555,7 +555,8 @@ window.FESTA_DATA = {
    "tag": "保育士、助産師、栄養士の元気な3人チーム",
    "intro": "「1人じゃないよ。いつでも頼ってね。」保育士・栄養士・助産師の3人で活動している「ハピスマ」です。私たちは、産後のママと赤ちゃんが、安心して毎日を過ごせるように、そして親子で楽しく健康づくりに触れられる機会をつくりたいという想いから、月に1回、親子で楽しめるイベントを開催しています。",
    "instagram": "https://www.instagram.com/happy.smile787/",
-   "line": ""
+   "line": "",
+   "photo": "img/hapisma.jpg"
   },
   "kazetotaiyo": {
    "name": "風と太陽",
@@ -572,7 +573,8 @@ window.FESTA_DATA = {
    "tag": "よもぎ蒸し・骨盤調整・水整体",
    "intro": "北中城小学校のすぐ近く。よもぎ蒸しや骨盤調整、水を使う新しい施術「水整体」が人気の完全予約制サロンです。",
    "instagram": "https://www.instagram.com/yuimarl_kitanaka/",
-   "line": ""
+   "line": "",
+   "photo": "img/yuimaru.jpg"
   },
   "kubatore": {
    "name": "クバトレ",
