@@ -598,6 +598,7 @@ window.FESTA_DATA = {
   "rena": {
    "name": "RENA",
    "people": "RENA",
+   "photo": "img/rena.jpg",
    "tag": "ムーブメント＆ライフパフォーマンスアップコーチ",
    "intro": "老若男女問わず、子ども〜大人まで楽しく軽やかに動けるカラダづくりのサポートをさせていただいております。",
    "instagram": "https://www.instagram.com/rena_trainer.oki/",
