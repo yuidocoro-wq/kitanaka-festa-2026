@@ -785,3 +785,6 @@ h1,h2,h3{ text-wrap:balance; }
 .visit-head h3{ color:var(--green-deep); }
 /* 当日の流れの3番：本文を1つのかたまりにする（.steps li は横並びのため）2026-09-20 */
 .steps li .step-body{ flex:1 1 auto; min-width:0; }
+
+/* 当日の受付の流れ（2026-10-08 観光協会の依頼：QRを見せる手順） */
+.day-flow-t{ margin:22px 0 10px; color:var(--green-deep); }
