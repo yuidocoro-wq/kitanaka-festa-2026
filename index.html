@@ -6,7 +6,7 @@
 <title>北中城村ウェルネススポーツフェスタ2026｜体験の予約</title>
 <meta name="description" content="2026年12月13日（日）北中城村中央公民館ホール。入場・体験は無料です。はいはい期の赤ちゃんから小学校低学年のお子さまと、おうちの方が主役の一日。気になる体験はこのページから予約できます。会場に入る方は、来場登録をお願いしています。">
 <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700&family=M+PLUS+1p:wght@400;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=20261013a">
+<link rel="stylesheet" href="style.css?v=20261014a">
 </head>
 <body>
 
@@ -152,9 +152,9 @@
   </div>
 </div>
 
-<script src="config.js?v=20261013a"></script>
-<script src="booths.js?v=20261013a"></script>
-<script src="app.js?v=20261013a"></script>
+<script src="config.js?v=20261014a"></script>
+<script src="booths.js?v=20261014a"></script>
+<script src="app.js?v=20261014a"></script>
 <script>
 (function () {
   "use strict";
@@ -246,6 +246,23 @@
   var careCards = cards.filter(function (b) { return b.zone.charAt(0) === "C"; });
   F.$("#hall-list").innerHTML = titleMenu(hallCards) + hallCards.map(boothCard).join("");
   F.$("#care-list").innerHTML = titleMenu(careCards) + careCards.map(boothCard).join("");
+
+  /* ---------- 受付開始前（config.js の openAt）：予約ボタンを止めて開始日を案内 ---------- */
+  if (F.notOpenYet()) {
+    var openTxt = F.openLabel() + "から";
+    var ve = F.$(".visit-entry");
+    var on = document.createElement("p");
+    on.className = "open-note";
+    on.innerHTML = "予約・来場登録の受付は<br><strong>" + esc(F.openLabel()) + "</strong> からはじまります";
+    ve.parentNode.insertBefore(on, ve);
+    F.$$('a.btn[href^="reserve.html"]').forEach(function (a) {
+      var s = document.createElement("span");
+      s.className = a.className + " is-waiting";
+      s.setAttribute("aria-disabled", "true");
+      s.textContent = a.classList.contains("btn-visit") ? "来場登録は" + openTxt : "予約は" + openTxt;
+      a.parentNode.replaceChild(s, a);
+    });
+  }
 
   /* ---------- だれが参加？（年齢で絞る） ---------- */
   var whoNow = null;

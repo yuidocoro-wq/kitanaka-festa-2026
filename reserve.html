@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>体験の予約｜北中城村ウェルネススポーツフェスタ2026</title>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700&family=M+PLUS+1p:wght@400;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=20261013a">
+<link rel="stylesheet" href="style.css?v=20261014a">
 </head>
 <body>
 
@@ -156,9 +156,9 @@
   </div>
 </footer>
 
-<script src="config.js?v=20261013a"></script>
-<script src="booths.js?v=20261013a"></script>
-<script src="app.js?v=20261013a"></script>
+<script src="config.js?v=20261014a"></script>
+<script src="booths.js?v=20261014a"></script>
+<script src="app.js?v=20261014a"></script>
 <script>
 (function () {
   "use strict";
@@ -460,6 +460,18 @@
   var SUBMIT_LABEL = visitMode ? "この内容で来場登録する" : "この内容で予約する";
   btn.textContent = SUBMIT_LABEL;
 
+  /* 受付開始前（config.js の openAt）は送れないようにして、開始日を案内する */
+  var waiting = F.notOpenYet();
+  if (waiting) {
+    var wTxt = (visitMode ? "来場登録" : "予約") + "の受付は " + F.openLabel() + " からはじまります。";
+    btn.disabled = true;
+    btn.textContent = (visitMode ? "来場登録" : "予約") + "は" + F.openLabel() + "から";
+    var wn = document.createElement("div");
+    wn.className = "msg msg-info";
+    wn.textContent = wTxt;
+    head.parentNode.insertBefore(wn, head);
+  }
+
   function showMsg(kind, text) {
     msgArea.innerHTML = '<div class="msg msg-' + kind + '">' + esc(text) + "</div>";
     msgArea.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -481,6 +493,7 @@
 
   F.$("#form").addEventListener("submit", function (e) {
     e.preventDefault();
+    if (waiting) return;
 
     var people = readPeople();
     var name = people.length ? people[0].name : "";

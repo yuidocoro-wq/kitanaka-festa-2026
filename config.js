@@ -5,5 +5,8 @@
 window.FESTA_CONFIG = {
   gasUrl: "https://script.google.com/macros/s/AKfycbz99zO6BrfsusFq-Dhrfc_gss8zrNzvFLWLy5-54pS66Yn-Ac91UN4s4NVMy5Gjqc4V/exec",
   siteKey: "kitanaka2026",
-  checkinPin: "1234"
+  checkinPin: "1234",
+  // openAt … 予約・来場登録の受付開始（10/14 山野さんと決定：北中城の広報配布に合わせて 11/1 から）。この時刻より前は、予約ボタンを止めて開始日を案内します
+  openAt: "2026-11-01T00:00:00+09:00",
+  openLabel: "11月1日（日）"
 };

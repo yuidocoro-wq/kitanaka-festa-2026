@@ -28,6 +28,14 @@
 
   function isDemo() { return !CFG.gasUrl; }
 
+  /* 受付開始前か（config.js の openAt）。開始前は予約ボタンを止めて開始日を案内する */
+  function notOpenYet() {
+    if (!CFG.openAt) return false;
+    var t = Date.parse(CFG.openAt);
+    return !isNaN(t) && Date.now() < t;
+  }
+  function openLabel() { return CFG.openLabel || ""; }
+
   function booth(id) {
     for (var i = 0; i < DATA.booths.length; i++) {
       if (DATA.booths[i].id === id) return DATA.booths[i];
@@ -162,6 +170,7 @@
     CFG: CFG, DATA: DATA,
     esc: esc, $: $, $$: $$, qs: qs,
     isDemo: isDemo, demoNo: demoNo, showDemoBar: showDemoBar,
+    notOpenYet: notOpenYet, openLabel: openLabel,
     booth: booth, exhibitor: exhibitor, reservableBooths: reservableBooths,
     isRace: isRace, provisionalNote: provisionalNote,
     timeText: timeText, mapUrl: mapUrl, mapUrlText: mapUrlText,
@@ -170,6 +179,22 @@
     saveLastNo: saveLastNo, loadLastNo: loadLastNo
   };
 })(window);
+
+/* ---------- QRやリンクから開いたときは、いつもページの一番上から（2026-10-14） ----------
+   スマホは前に見た位置を覚えていて、2回目は途中から開くことがある。
+   同じサイト内の「#ブース予約」などへの移動だけは、そのまま飛ぶ */
+(function () {
+  var inside = false;
+  try { inside = !!document.referrer && new URL(document.referrer).host === location.host; } catch (e) { }
+  if (location.hash && inside) return;
+  if ("scrollRestoration" in history) history.scrollRestoration = "manual";
+  if (location.hash) { try { history.replaceState(null, "", location.pathname + location.search); } catch (e) { } }
+  function goTop() { window.scrollTo(0, 0); }
+  goTop();
+  window.addEventListener("DOMContentLoaded", goTop);
+  window.addEventListener("load", goTop);
+  window.addEventListener("pageshow", function (e) { if (e.persisted) goTop(); });
+})();
 
 /* ---------- スマホ：固定メニューの縮小と「▲ トップへ」（2026-09-16） ---------- */
 (function () {

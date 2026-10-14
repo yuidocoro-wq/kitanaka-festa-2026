@@ -788,3 +788,9 @@ h1,h2,h3{ text-wrap:balance; }
 
 /* 当日の受付の流れ（2026-10-08 観光協会の依頼：QRを見せる手順） */
 .day-flow-t{ margin:22px 0 10px; color:var(--green-deep); }
+
+/* 受付開始前（2026-10-14）：開始日の案内と、止めた予約ボタン */
+.open-note{ margin:0 0 14px; padding:12px 16px; border-radius:14px; background:#FFF1D6; border:2px solid var(--yellow-dark); color:#6B4E00; font-weight:700; font-size:17px; line-height:1.6; text-align:center; }
+.open-note strong{ font-size:21px; }
+.btn.is-waiting{ background:#EFEDE8; color:var(--ink-soft); border-color:var(--line); cursor:default; }
+.btn.is-waiting:active{ background:#EFEDE8; }
