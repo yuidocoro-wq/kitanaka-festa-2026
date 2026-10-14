@@ -17,6 +17,7 @@ window.FESTA_DATA = {
  "booths": [
   {
    "id": "haihai",
+   "illust": "img/illust/haihai.jpg",
    "name": "ハイハイレース",
    "short": "はいはい",
    "zone": "B 動くゾーン（舞台）",
@@ -40,6 +41,7 @@ window.FESTA_DATA = {
   },
   {
    "id": "yochiyochi",
+   "illust": "img/illust/yochiyochi.jpg",
    "name": "よちよちレース",
    "short": "よちよち",
    "zone": "B 動くゾーン（舞台）",
@@ -64,6 +66,7 @@ window.FESTA_DATA = {
   },
   {
    "id": "kids",
+   "illust": "img/illust/kids.jpg",
    "name": "運動あそび（午前の部・午後の部）",
    "short": "運動あそび",
    "zone": "B 動くゾーン",
@@ -91,6 +94,7 @@ window.FESTA_DATA = {
   },
   {
    "id": "adult",
+   "illust": "img/illust/adult.jpg",
    "name": "大人向けエクササイズ（クバトレ・午前）",
    "short": "大人エクササイズ",
    "zone": "B 動くゾーン（舞台の前）",
@@ -115,6 +119,7 @@ window.FESTA_DATA = {
   },
   {
    "id": "kubatore_pm",
+   "illust": "img/illust/kubatore_pm.jpg",
    "name": "大人とお子さまの対決あそび（クバトレ・午後）",
    "short": "対決あそび",
    "zone": "B 動くゾーン（舞台の前）",
@@ -140,6 +145,7 @@ window.FESTA_DATA = {
   },
   {
    "id": "ashimomi",
+   "illust": "img/illust/ashimomi.jpg",
    "name": "足もみ体験",
    "short": "足もみ",
    "zone": "C-1 ケアブース",
@@ -172,6 +178,7 @@ window.FESTA_DATA = {
   },
   {
    "id": "seitai_yuimaru",
+   "illust": "img/illust/seitai_yuimaru.jpg",
    "name": "リラクゼーション整体体験（ゆいまーる）",
    "short": "整体",
    "zone": "C-2 ケアブース",
@@ -298,6 +305,7 @@ window.FESTA_DATA = {
   },
   {
    "id": "conditioning",
+   "illust": "img/illust/conditioning.jpg",
    "name": "スポーツコンディショニング・整体ブース（クバトレ）",
    "short": "コンディショニング",
    "zone": "C-3 ケアブース",
@@ -321,6 +329,7 @@ window.FESTA_DATA = {
   },
   {
    "id": "stretch",
+   "illust": "img/illust/stretch.jpg",
    "name": "コンディショニング（MK2）",
    "short": "コンディショニング",
    "zone": "C-4 ケアブース（広め）",

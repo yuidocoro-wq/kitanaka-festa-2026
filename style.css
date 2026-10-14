@@ -794,3 +794,9 @@ h1,h2,h3{ text-wrap:balance; }
 .open-note strong{ font-size:21px; }
 .btn.is-waiting{ background:#EFEDE8; color:var(--ink-soft); border-color:var(--line); cursor:default; }
 .btn.is-waiting:active{ background:#EFEDE8; }
+
+/* 体験カード：題名の横のイラスト（2026-10-14） */
+.booth-head{ display:flex; align-items:flex-start; gap:12px; }
+.booth-head-t{ flex:1 1 auto; min-width:0; }
+.booth-illust{ flex:0 0 auto; width:120px; height:120px; border-radius:18px; object-fit:cover; background:#FFFDF8; border:1px solid var(--line); }
+@media (max-width:420px){ .booth-illust{ width:112px; height:112px; border-radius:14px; } }
