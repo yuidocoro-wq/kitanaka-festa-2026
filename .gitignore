@@ -1,0 +1,6 @@
+# 公開リポに入れないもの（2026-10-16）
+# GAS（受付係）のソースは非公開の 2nd-Brain 側 06_予約サイト/gas/Code.gs が正本
+gas/
+.DS_Store
+*.bak
+*_backup*
