@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>当日受付｜北中城村ウェルネススポーツフェスタ2026</title>
 <meta name="robots" content="noindex">
-<link rel="stylesheet" href="style.css?v=20261014c">
+<link rel="stylesheet" href="style.css?v=20261016a">
 </head>
 <body class="checkin-body">
 
@@ -18,10 +18,10 @@
     <section id="pin-area">
       <div class="card">
         <h2>合言葉を入れてください</h2>
-        <p class="muted">スタッフ用の画面です。4けたの番号を入れてください。</p>
+        <p class="muted">スタッフ用の画面です。なつきさんから伝えられた合言葉（8文字以上）を入れてください。</p>
         <div class="field">
-          <label for="pin">4けたの番号</label>
-          <input type="password" id="pin" inputmode="numeric" autocomplete="off" maxlength="8">
+          <label for="pin">合言葉</label>
+          <input type="password" id="pin" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" maxlength="64">
         </div>
         <div id="pin-msg"></div>
         <button type="button" class="btn btn-main" id="pin-btn">開く</button>
@@ -91,10 +91,10 @@
   </div>
 </main>
 
-<script src="jsQR.js?v=20261014c"></script>
-<script src="config.js?v=20261014c"></script>
-<script src="booths.js?v=20261014c"></script>
-<script src="app.js?v=20261014c"></script>
+<script src="jsQR.js?v=20261016a"></script>
+<script src="config.js?v=20261016a"></script>
+<script src="booths.js?v=20261016a"></script>
+<script src="app.js?v=20261016a"></script>
 <script>
 (function () {
   "use strict";
@@ -110,7 +110,7 @@
   /* ---------- ① PIN ---------- */
   function tryPin() {
     var v = F.$("#pin").value.trim();
-    if (!v) { box(F.$("#pin-msg"), "err", "番号を入れてください。"); return; }
+    if (!v) { box(F.$("#pin-msg"), "err", "合言葉を入れてください。"); return; }
     function open_() {
       PIN = v;
       F.$("#pin-area").hidden = true;
@@ -124,6 +124,8 @@
     box(F.$("#pin-msg"), "info", "確認しています…");
     F.getGas({ action: "lookup", no: "KF-0000", pin: v }).then(function (j) {
       if (j && j.error === "pin") { box(F.$("#pin-msg"), "err", F.friendlyError("pin")); return; }
+      if (j && j.error === "locked") { box(F.$("#pin-msg"), "err", F.friendlyError("locked")); return; }
+      if (j && j.error === "setup") { box(F.$("#pin-msg"), "err", "受付係の合言葉の設定が終わっていません（未設定か8文字より短い）。なつきさんに連絡してください。"); return; }
       F.$("#pin-msg").innerHTML = "";
       open_();
     }).catch(function () { box(F.$("#pin-msg"), "err", F.friendlyError("network")); });

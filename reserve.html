@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>体験の予約｜北中城村ウェルネススポーツフェスタ2026</title>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700&family=M+PLUS+1p:wght@400;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=20261014c">
+<link rel="stylesheet" href="style.css?v=20261016a">
 </head>
 <body>
 
@@ -87,7 +87,7 @@
           </label>
         </div>
 
-        <!-- 9/16 山野さん感想を受けて「ほかにも予約する」は使わない（1回の申込＝1つの体験）。部品は残して非表示 -->
+        <!-- 9/16 観光協会の担当の方の感想を受けて「ほかにも予約する」は使わない（1回の申込＝1つの体験）。部品は残して非表示 -->
         <div class="field" id="field-more" hidden>
           <button type="button" class="btn btn-sub" id="other-open">＋ ほかにも予約する</button>
           <p class="hint">時間が重ならない体験は、いっしょに予約できます。</p>
@@ -113,6 +113,9 @@
         <div class="ticket-head">
           <p class="ttl" id="t-no-label">予約番号</p>
           <span class="ticket-no" id="t-no"></span>
+          <!-- 予約番号のQR（2026-10-16〜 画面にも出す。メールが遅れても、この画面のスクショで当日受付できるように） -->
+          <div id="t-qr" hidden style="width:184px;max-width:70%;margin:14px auto 4px;background:#fff;padding:6px;border-radius:8px;line-height:0;"></div>
+          <p class="small" id="t-qr-cap" hidden style="margin:4px 0 0;">当日、受付でこのQRコードをお見せください</p>
         </div>
         <hr class="ticket-cut">
         <div class="ticket-body">
@@ -125,13 +128,14 @@
         <p class="small" id="t-qr-note" hidden style="margin:10px 14px 0;">受付でお見せいただくQRコードは、確認メールに入っています。</p>
       </div>
 
+      <div class="msg msg-info" id="t-shot" style="font-weight:700;">この画面をスクリーンショットで保存しておいてください。<br><span style="font-weight:400;">確認メールは遅れて届くことがあります。当日は、この画面のQRコードか番号をお見せいただければ受付できます。</span></div>
       <div class="msg msg-ok" id="t-mail"></div>
 
       <div class="card">
         <h3>当日の流れ</h3>
         <ol class="steps">
           <li id="step-arrive">会場に着いたら、まず受付にお越しください。</li>
-          <li id="step-show">受付で、この予約番号（またはメールのQR）をお見せください。</li>
+          <li id="step-show">受付で、この画面のQRコード（またはメールのQR・予約番号）をお見せください。</li>
           <li id="step-meet">時間になったら、ブースへお集まりください。</li>
         </ol>
       </div>
@@ -156,9 +160,10 @@
   </div>
 </footer>
 
-<script src="config.js?v=20261014c"></script>
-<script src="booths.js?v=20261014c"></script>
-<script src="app.js?v=20261014c"></script>
+<script src="config.js?v=20261016a"></script>
+<script src="booths.js?v=20261016a"></script>
+<script src="app.js?v=20261016a"></script>
+<script src="qr.js?v=20261016a"></script>
 <script>
 (function () {
   "use strict";
@@ -412,7 +417,7 @@
       var bad = false;
       chosen.forEach(function (c) { if (c.id !== b.id && overlaps(c, b)) bad = true; });
       /* 同じ体験のほかの時間は、チェックボックス（ほかにも予約）のときだけ塞ぐ。
-         ラジオ（時間（部）を1つえらぶ）は1つしか選べないので塞がない＝あとから選び直せる（9/16 山野さん指摘） */
+         ラジオ（時間（部）を1つえらぶ）は1つしか選べないので塞がない＝あとから選び直せる（9/16 観光協会の担当の方の指摘） */
       if (!i.checked && b.group && i.type !== "radio") chosen.forEach(function (c) { if (c.group === b.group && c.id !== b.id) bad = true; });
       var wrap = i.closest("label"), ng = wrap.querySelector(".ng");
       if (bad && !i.checked) { i.disabled = true; wrap.style.opacity = ".55"; if (ng) ng.hidden = false; }
@@ -566,7 +571,7 @@
         done(j.no, j.name || name, j.booths || ids.map(function (id) {
           var b = F.booth(id);
           return { id: id, name: b ? b.name : id, time: b ? b.time : "" };
-        }), false);
+        }), false, j.mail || (j.mailed === false ? "queued" : "sent"));
       } else {
         F.$("#sending").hidden = true;
         btn.disabled = false;
@@ -582,8 +587,15 @@
   });
 
   /* ---------- 完了（チケット） ---------- */
-  function done(no, name, booths, demo) {
+  function done(no, name, booths, demo, mailState) {
     var people = window.__lastPeople || [];
+    /* 確認メールの案内（2026-10-16）: 受付係が「送信待ちに積んだ」ときは、遅れて届くと伝える */
+    var queued = (mailState === "queued");
+    var mailMsg = demo
+      ? "これはテスト表示です。本番ではここに「確認メールをお送りしました」と出ます。"
+      : (queued
+        ? "ご予約は確定しています。確認メールは混み合っているため、少し遅れて（翌日ごろまでに）お送りします。"
+        : "確認メールをお送りしました。届かないときは、迷惑メールフォルダもご覧ください。");
     F.$("#sending").hidden = true;
     F.$("#form-area").hidden = true;
     F.$("#done-area").hidden = false;
@@ -591,27 +603,35 @@
     try {
 
     F.$("#t-no").textContent = no;
+    /* 予約番号のQRを画面にも出す（この端末の中で作る・外には送らない） */
+    var qrSvg = "";
+    try { qrSvg = (window.FestaQR && no) ? window.FestaQR.svg(no) : ""; } catch (eq) { qrSvg = ""; }
+    if (qrSvg) {
+      F.$("#t-qr").innerHTML = qrSvg;
+      F.$("#t-qr").hidden = false;
+      F.$("#t-qr-cap").hidden = false;
+      F.$("#t-qr-note").hidden = true;
+    }
+    if (queued) F.$("#t-splash-s").textContent = "ご予約は確定しています。確認メールは少し遅れて届きます。";
     F.$("#t-name").textContent = name + " 様" + (people.length > 1 ? "（ほか" + (people.length - 1) + "名）" : "");
 
     /* ---- 来場のみの完了画面（体験の一覧と集合のきまりは出さない） ---- */
     if (visitMode) {
       F.$("#t-splash-t").textContent = "来場登録を承りました！";
-      F.$("#t-splash-s").textContent = "確認メールをお送りしました。当日お会いできるのを楽しみにしています。";
+      F.$("#t-splash-s").textContent = queued ? "登録は確定しています。確認メールは少し遅れて届きます。" : "確認メールをお送りしました。当日お会いできるのを楽しみにしています。";
       F.$("#t-no-label").textContent = "受付番号";
       F.$("#t-row-booths").hidden = true;
       F.$("#t-row-meet").hidden = true;
       F.$("#t-date").textContent = E.dateLabel + "　" + E.time;
       F.$("#t-venue").textContent = E.venue;
       F.$("#step-arrive").textContent = "会場に着いたら、まず入口の受付にお越しください。";
-      F.$("#step-show").textContent = "受付で、この受付番号（またはメールのQRコード）をお見せください。";
-      F.$("#t-qr-note").hidden = false;
+      F.$("#step-show").textContent = "受付で、この画面のQRコード（またはメールのQRコード・受付番号）をお見せください。";
+      F.$("#t-qr-note").hidden = !!qrSvg;
       F.$("#step-meet").innerHTML = "<span class='step-body'>空いているブースには、その場で入っていただけます。<br><span class='small'>ご予約の方が先になります。どのブースが空いているかは、会場のスタッフにお尋ねください。</span></span>";
       F.$("#t-more").textContent = "体験も予約する（ブース一覧を見る）";
       F.$("#t-more-note").textContent = "気になる体験が出てきたら、上のボタンから予約できます。そのときは体験の予約番号が新しく届きますので、当日の受付ではその番号をお見せください。";
       F.$("#t-cancel-note").textContent = "取り消しは、確認メールの「予約をキャンセルする」を押してください。「本当に取り消しますか？」→「取り消す」で完了します（お電話はいりません）。";
-      F.$("#t-mail").textContent = demo
-        ? "これはテスト表示です。本番ではここに「確認メールをお送りしました」と出ます。"
-        : "確認メールをお送りしました。届かないときは、迷惑メールフォルダもご覧ください。";
+      F.$("#t-mail").textContent = mailMsg;
       F.$("#t-map").href = F.mapUrl();
       F.$("#t-contact").textContent = E.contact;
       if (!demo) F.saveLastNo(no);
@@ -641,9 +661,7 @@
         (who.length ? "<br><span class='small'>受ける人：" + esc(who.join("・")) + "</span>" : "");
     }).join("<br>");
 
-    F.$("#t-mail").textContent = demo
-      ? "これはテスト表示です。本番ではここに「確認メールをお送りしました」と出ます。"
-      : "確認メールをお送りしました。届かないときは、迷惑メールフォルダもご覧ください。";
+    F.$("#t-mail").textContent = mailMsg;
 
     F.$("#t-map").href = F.mapUrl();
     F.$("#t-contact").textContent = E.contact;
