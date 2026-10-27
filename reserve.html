@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>体験の予約｜北中城村ウェルネススポーツフェスタ2026</title>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700&family=M+PLUS+1p:wght@400;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=20261016a">
+<link rel="stylesheet" href="style.css?v=20261028a">
 </head>
 <body>
 
@@ -29,6 +29,17 @@
     <section id="form-area">
       <h2 id="form-title"><span class="bar"></span>予約フォーム</h2>
 
+      <!-- 北中城村のゆるキャラが案内（2026-10-28・村の使用許可あり） -->
+      <div class="chara-hello no-print">
+        <svg class="chara-sun" viewBox="0 0 40 40" aria-hidden="true"><g fill="#F2B705"><ellipse cx="20" cy="6" rx="4" ry="6"/><ellipse cx="20" cy="34" rx="4" ry="6"/><ellipse cx="6" cy="20" rx="6" ry="4"/><ellipse cx="34" cy="20" rx="6" ry="4"/><ellipse cx="10" cy="10" rx="4" ry="6" transform="rotate(-45 10 10)"/><ellipse cx="30" cy="30" rx="4" ry="6" transform="rotate(-45 30 30)"/><ellipse cx="30" cy="10" rx="4" ry="6" transform="rotate(45 30 10)"/><ellipse cx="10" cy="30" rx="4" ry="6" transform="rotate(45 10 30)"/></g><circle cx="20" cy="20" r="7" fill="#7A4A1E"/></svg>
+        <p class="chara-bubble" id="chara-hello-t">めんそーれ！体験の予約はここからだよ。わからないところは、わたしたちが案内するね。</p>
+        <div class="chara-team">
+          <figure><img src="img/chara/mai.png" alt="城まーい" width="247" height="320"><figcaption>城まーい</figcaption></figure>
+          <figure><img src="img/chara/pechin.png" alt="北のぺーちん" width="252" height="320"><figcaption>北のぺーちん</figcaption></figure>
+          <figure><img src="img/chara/yukurin.png" alt="中ゆくりん" width="284" height="320"><figcaption>中ゆくりん</figcaption></figure>
+        </div>
+      </div>
+
       <div class="card" id="booth-head"></div>
 
       <div id="msg-area"></div>
@@ -37,6 +48,7 @@
 
         <div class="field" id="field-people">
           <label><span class="stepno">1</span>参加する人（全員）<span class="req">必須</span></label>
+          <div class="chara-tip no-print"><img src="img/chara/pechin.png" alt="北のぺーちん" width="252" height="320"><p>お子さまもふくめて、みんなのお名前を書いてね！</p></div>
           <p class="hint" id="people-hint">保険の登録のため、いっしょに来る方を全員ご記入ください（お子さまも）。</p>
           <div id="people-list"></div>
           <button type="button" class="btn btn-line" id="add-person">＋ 人を追加する</button>
@@ -44,6 +56,7 @@
 
         <div class="field">
           <label for="f-address"><span class="stepno">2</span>住所（代表の方）<span class="req">必須</span></label>
+          <div class="chara-tip no-print"><img src="img/chara/yukurin.png" alt="中ゆくりん" width="284" height="320"><p>住所と連絡先を入れてね。メールに番号が届くよ。</p></div>
           <p class="hint">保険の登録に使います。例：北中城村字仲順435</p>
           <input type="text" id="f-address" name="address" autocomplete="street-address" required>
         </div>
@@ -95,6 +108,7 @@
         </div>
 
         <p class="small" style="margin:14px 0 6px;"><span class="stepno">3</span>内容を確認して送信</p>
+        <div class="chara-tip no-print"><img src="img/chara/mai.png" alt="城まーい" width="247" height="320"><p>さいごに内容を見直してね。もうすこしだよ！</p></div>
         <button type="submit" class="btn btn-main" id="submit-btn">この内容で予約する</button>
         <a class="btn btn-quiet" href="index.html">ブース一覧にもどる</a>
         <p class="small">体験は無料です。無理な営業・勧誘はしません。</p>
@@ -104,9 +118,11 @@
     <!-- 完了画面（チケット） -->
     <section id="done-area" hidden>
       <div class="splash">
+        <div class="chara-cheer no-print" aria-hidden="true"><img src="img/chara/mai.png" alt="" width="247" height="320"><img src="img/chara/pechin.png" alt="" width="252" height="320"><img src="img/chara/yukurin.png" alt="" width="284" height="320"></div>
         <svg viewBox="0 0 80 80" width="88" height="88" aria-hidden="true"><circle cx="40" cy="40" r="36" fill="#468977"/><path d="M22 41l12 12 24-26" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg>
         <p class="splash-t" id="t-splash-t">ご予約を承りました！</p>
         <p class="splash-s" id="t-splash-s">確認メールをお送りしました。当日お会いできるのを楽しみにしています。</p>
+        <p class="chara-cheer-t no-print">12月13日、北中城でまってるね！</p>
       </div>
 
       <div class="ticket">
@@ -152,7 +168,7 @@
   </div>
 </main>
 
-<div id="sending" class="sending" hidden><div class="sending-box"><div class="spin"></div><p>送信しています…<br><span class="small">10秒ほどかかることがあります</span></p></div></div>
+<div id="sending" class="sending" hidden><div class="sending-box"><div class="chara-hop" aria-hidden="true"><img src="img/chara/mai.png" alt="" width="247" height="320"><img src="img/chara/pechin.png" alt="" width="252" height="320"><img src="img/chara/yukurin.png" alt="" width="284" height="320"></div><div class="spin"></div><p>送信しています…<br><span class="small">10秒ほどかかることがあります</span></p></div></div>
 
 <footer class="site-foot no-print">
   <div class="wrap">
@@ -188,6 +204,7 @@
     document.title = "来場登録｜北中城村ウェルネススポーツフェスタ2026";
     F.$(".wm-sub").textContent = "来場登録";
     F.$("#form-title").innerHTML = '<span class="bar"></span>来場登録';
+    F.$("#chara-hello-t").textContent = "めんそーれ！来場登録はここからだよ。当日いっしょに来るみんなのお名前を教えてね。";
     head.innerHTML = "<h3>来場登録（体験の予約はしません）</h3>" +
       '<p class="muted">会場に入る方は、みなさん受付をお願いしています。イベントの保険に登録するため、当日いらっしゃる方のお名前を、前もってうかがっています。</p>' +
       '<p class="muted">空いているブースには、当日その場で入っていただけます（ご予約の方が先になります）。</p>';
