@@ -118,6 +118,11 @@
 
   /* ---------------- エラーメッセージ（やさしい日本語に） ---------------- */
 
+  /* ケアブース（足もみ・整体・コンディショニング）か。受付係の isCareBooth_ と同じ決まり */
+  function isCareBooth(id) {
+    return /^(ashimomi_|seitai_yuimaru|stretch_)/.test(id) || id === "conditioning";
+  }
+
   function friendlyError(code, extra) {
     switch (code) {
       case "full":
@@ -128,6 +133,9 @@
         return names.length
           ? "申し訳ありません。「" + names.join("」「") + "」は、ちょうど満席になりました。ほかのブースをお選びいただくか、当日の空き枠をお試しください。"
           : "申し訳ありません。ちょうど満席になりました。当日の空き枠をお試しください。";
+      case "care_limit":
+        return (extra && extra.length ? extra.join("さん、") + "さんは、" : "") +
+          "ケアブースの事前予約がすでに入っているか、2つ以上選ばれています。事前ケアブース予約はお一人1つまで、中央プログラムは予約可能です。当日の空き枠をご利用ください。";
       case "key":
         return "うまく送信できませんでした。お手数ですが、ページを開き直してもう一度お試しください。";
       case "pin":
@@ -181,6 +189,7 @@
     timeText: timeText, mapUrl: mapUrl, mapUrlText: mapUrlText,
     fetchStatus: fetchStatus, postGas: postGas, getGas: getGas,
     friendlyError: friendlyError,
+    isCareBooth: isCareBooth,
     saveLastNo: saveLastNo, loadLastNo: loadLastNo
   };
 })(window);
