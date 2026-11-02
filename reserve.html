@@ -80,7 +80,7 @@
 
         <div class="field" id="field-other">
           <label id="other-label">このブース以外にも予約したいものがあれば</label>
-          <p class="hint">時間が重ならないものは、いっしょに予約できます。予約番号はまとめて1つになります。事前ケアブース予約はお一人1つまで、中央プログラムは予約可能です。当日の空き枠をご利用ください。</p>
+          <p class="hint">時間が重ならないものは、いっしょに予約できます。予約番号はまとめて1つになります。事前ケアブース予約はお一人1つまで、中央プログラムとの併用は可能です。当日の空き枠をご利用ください。</p>
           <div id="other-list"></div>
         </div>
 
@@ -103,7 +103,7 @@
         <!-- 9/16 観光協会の担当の方の感想を受けて「ほかにも予約する」は使わない（1回の申込＝1つの体験）。部品は残して非表示 -->
         <div class="field" id="field-more" hidden>
           <button type="button" class="btn btn-sub" id="other-open">＋ ほかにも予約する</button>
-          <p class="hint">時間が重ならない体験は、いっしょに予約できます。事前ケアブース予約はお一人1つまで、中央プログラムは予約可能です。当日の空き枠をご利用ください。</p>
+          <p class="hint">時間が重ならない体験は、いっしょに予約できます。事前ケアブース予約はお一人1つまで、中央プログラムとの併用は可能です。当日の空き枠をご利用ください。</p>
           <div id="other-panel" hidden></div>
         </div>
 
@@ -178,7 +178,7 @@
 
 <script src="config.js?v=20261016a"></script>
 <script src="booths.js?v=20261016a"></script>
-<script src="app.js?v=20261102a"></script>
+<script src="app.js?v=20261102b"></script>
 <script src="qr.js?v=20261016a"></script>
 <script>
 (function () {
@@ -542,7 +542,7 @@
     /* ケアブースは事前予約お一人1つまで（2026-11-02）。別の申込で2つ目になる場合は受付係が止めます */
     for (var cp = 0; cp < people.length; cp++) {
       if ((people[cp].booths || []).filter(F.isCareBooth).length >= 2) {
-        showMsg("err", people[cp].name + " さんは、ケアブースを1つだけお選びください。事前ケアブース予約はお一人1つまで、中央プログラムは予約可能です。当日の空き枠をご利用ください。");
+        showMsg("err", people[cp].name + " さんは、ケアブースを1つだけお選びください。事前ケアブース予約はお一人1つまで、中央プログラムとの併用は可能です。当日の空き枠をご利用ください。");
         return;
       }
     }
