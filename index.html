@@ -326,15 +326,24 @@
           sp.className = "slot-state" + (st.remaining <= 0 ? " is-full" : "");
         });
       }
+      /* 枠が分かれている体験は、足した数を出さず、枠ごとの残りを出す（足すと定員のままに見えるため） */
+      var remainText = "残り" + s.remaining + "枠";
+      if (b0 && b0.slots) {
+        remainText = b0.slots.map(function (sid) {
+          var st = map[sid], sb = F.booth(sid);
+          if (!st || !sb || !(st.remaining > 0)) return "";
+          return '<span style="white-space:nowrap">' + esc(sb.short) + " 残り" + esc(String(st.remaining)) + "</span>";
+        }).filter(Boolean).join("／");
+      }
       if (s.remaining <= 0) {
         el.className = "remain full";
         el.textContent = "満席（当日枠あり）";
       } else if (s.remaining <= 2) {
         el.className = "remain few";
-        el.textContent = "残り" + s.remaining + "枠";
+        el.innerHTML = remainText;
       } else {
         el.className = "remain ok";
-        el.textContent = "残り" + s.remaining + "枠";
+        el.innerHTML = remainText;
       }
     });
   }

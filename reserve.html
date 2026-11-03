@@ -236,6 +236,7 @@
     h.push("<div><dt>時間</dt><dd>" + esc(F.timeText(mainBooth)) + "</dd></div>");
     h.push("<div><dt>対象</dt><dd>" + esc(mainBooth.target) + "</dd></div>");
     h.push("<div><dt>場所</dt><dd>" + esc(mainBooth.zone) + "</dd></div>");
+    h.push('<div id="main-remain" hidden><dt>残り</dt><dd></dd></div>');
     h.push("</dl>");
     if (mainBooth.caution) {
       h.push('<p class="caution">ご注意：' + esc(mainBooth.caution) + "</p>");
@@ -455,17 +456,30 @@
   F.$("#other-panel").addEventListener("change", renderPersonBooths);
   refreshOthers();
   renderPersonBooths();
-  /* 満席の枠は選べなくする（受付係に残りを聞く） */
+  /* 満席の枠は選べなくする。空きのある枠には残りの数を出す（受付係に残りを聞く） */
   if (!F.isDemo()) {
     F.fetchStatus().then(function (map) {
       allInputs().forEach(function (i) {
         var st = map[i.value];
-        if (st && typeof st.remaining === "number" && st.remaining <= 0) {
+        if (!st || typeof st.remaining !== "number") return;
+        var wrap = i.closest("label");
+        var b = wrap.querySelector("b");
+        if (st.remaining <= 0) {
           i.checked = false; i.disabled = true;
-          var wrap = i.closest("label"); wrap.style.opacity = ".55";
-          var b = wrap.querySelector("b"); if (b && b.textContent.indexOf("満席") < 0) b.textContent += "　満席";
+          wrap.style.opacity = ".55";
+          if (b && b.textContent.indexOf("満席") < 0) b.textContent += "　満席";
+        } else if (b && b.textContent.indexOf("残り") < 0) {
+          var ib = F.booth(i.value);
+          b.textContent += "　残り" + st.remaining + ((ib && ib.unit) || "名");
         }
       });
+      if (mainBooth && map[mainBooth.id] && typeof map[mainBooth.id].remaining === "number") {
+        var mainRemain = F.$("#main-remain");
+        if (mainRemain && map[mainBooth.id].remaining > 0) {
+          mainRemain.querySelector("dd").textContent = map[mainBooth.id].remaining + (mainBooth.unit || "名");
+          mainRemain.hidden = false;
+        }
+      }
       if (mainBooth && map[mainBooth.id] && map[mainBooth.id].remaining <= 0) {
         showMsg("info", "「" + mainBooth.name + "」は満席です。当日の空き枠をお試しいただくか、ほかの体験をお選びください。");
       }
