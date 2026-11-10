@@ -93,7 +93,7 @@
 
 <script src="jsQR.js?v=20261016a"></script>
 <script src="config.js?v=20261016a"></script>
-<script src="booths.js?v=20261110a"></script>
+<script src="booths.js?v=20261110b"></script>
 <script src="app.js?v=20261102b"></script>
 <script>
 (function () {
@@ -342,6 +342,10 @@
             (time ? '　<span class="small">' + esc(time) + "</span>" : "") +
             (done ? '　<span class="badge-big badge-done" style="font-size:15px;padding:2px 10px;">参加済み</span>'
                   : '　<button type="button" class="btn btn-line" style="display:inline-flex;width:auto;min-height:40px;padding:6px 12px;font-size:15px;margin:0;" data-part="' + esc(b.id) + '" data-no="' + esc(p.no) + '">体験おわり</button>') +
+            /* 受付での声かけ（booths.json の deskNote。2026-11-10 追加） */
+            (!done && full && full.deskNote
+              ? '<div style="margin:6px 0 2px;padding:8px 12px;background:#FFF4D6;border-left:5px solid #E8A33D;border-radius:6px;font-size:16px;font-weight:700;line-height:1.5;color:#3A2A00;">📣 ' + esc(full.deskNote) + "</div>"
+              : "") +
             "</div>";
         }).join("")
       : (visitOnly ? "" : '<div class="booth-line">予約ブースなし</div>'));
