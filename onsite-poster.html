@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>当日の来場登録 看板（A4）｜北中城村ウェルネススポーツフェスタ2026</title>
+<meta name="robots" content="noindex">
+<!-- 会場に貼る看板（A4縦1枚・印刷用・2026-11-11）。サイトのどこからもリンクしていません -->
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700&family=M+PLUS+1p:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css?v=20261028a">
+<style>
+  @page { size: A4 portrait; margin: 0; }
+  html, body { margin: 0; padding: 0; }
+  body.poster-body { background: #E9EEEC; }
+  .poster-tools { max-width: 210mm; margin: 16px auto 10px; padding: 0 12px; font-size: 15px; color: #555; }
+  .poster-tools button { font: inherit; font-weight: 700; padding: 8px 18px; border-radius: 999px; border: 2px solid #2F6B5A; background: #468977; color: #fff; cursor: pointer; margin-right: 10px; }
+  .sheet {
+    width: 210mm; height: 297mm; margin: 0 auto 24px; background: #fff; box-sizing: border-box;
+    padding: 14mm 16mm 12mm; display: flex; flex-direction: column; align-items: center; text-align: center;
+    box-shadow: 0 2px 10px rgba(0,0,0,.12); overflow: hidden; position: relative;
+    font-family: "M PLUS 1p", "Noto Sans JP", "Hiragino Sans", Meiryo, sans-serif; color: #222;
+  }
+  .sheet::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 6mm; background: #468977; }
+  .p-event { margin: 4mm 0 0; font-family: "Zen Maru Gothic", "M PLUS 1p", sans-serif; color: #2F6B5A; font-size: 15pt; font-weight: 700; letter-spacing: .06em; line-height: 1.4; }
+  .p-title { margin: 3mm 0 0; font-family: "Zen Maru Gothic", "M PLUS 1p", sans-serif; font-size: 44pt; font-weight: 700; color: #2F6B5A; line-height: 1.2; letter-spacing: .04em; }
+  .p-lead { margin: 5mm 0 0; padding: 3mm 8mm; background: #EAF3EF; border: 2px solid #468977; border-radius: 6mm; font-size: 19pt; font-weight: 700; line-height: 1.45; }
+  .p-qr { margin: 7mm 0 0; width: 118mm; height: 118mm; padding: 3mm; border: 1.2mm solid #468977; border-radius: 6mm; background: #fff; box-sizing: content-box; line-height: 0; }
+  .p-qr svg { width: 100%; height: 100%; display: block; }
+  .p-scan { margin: 3mm 0 0; font-size: 14pt; font-weight: 700; color: #2F6B5A; }
+  .p-steps { margin: 6mm 0 0; padding: 0; list-style: none; width: 100%; max-width: 165mm; text-align: left; }
+  .p-steps li { display: flex; align-items: flex-start; gap: 4mm; font-size: 16pt; line-height: 1.5; margin: 0 0 3mm; }
+  .p-steps .n { flex: 0 0 auto; width: 10mm; height: 10mm; border-radius: 50%; background: #468977; color: #fff; font-weight: 700; font-size: 15pt; line-height: 10mm; text-align: center; margin-top: .6mm; }
+  .p-steps b { color: #2F6B5A; }
+  .p-nophone { margin: auto 0 0; width: 100%; max-width: 165mm; padding: 3.5mm 6mm; border: 2px dashed #468977; border-radius: 5mm; font-size: 17pt; font-weight: 700; line-height: 1.4; box-sizing: border-box; }
+  .p-foot { margin: 4mm 0 0; font-size: 10pt; color: #555; line-height: 1.5; }
+  .p-err { color: #B3281E; font-size: 14pt; line-height: 1.5; padding: 30mm 8mm; }
+
+  /* 印刷：紙1枚だけを出す（まわりの灰色・説明・ボタン・影は出さない） */
+  @media print {
+    body.poster-body { background: #fff; }
+    .poster-tools, .demo-bar, .to-top { display: none !important; }
+    .sheet { margin: 0; box-shadow: none; page-break-after: avoid; break-after: avoid; }
+    .sheet, .sheet * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+  /* 画面が狭いとき（スマホで確かめるとき）は縮めて見せる */
+  @media screen and (max-width: 820px) {
+    .sheet { zoom: .45; }
+  }
+</style>
+</head>
+<body class="poster-body">
+
+<div class="poster-tools">
+  <button type="button" onclick="window.print()">印刷する</button>
+  A4縦・余白なし・倍率100%で印刷してください（看板用。このページはサイトからリンクしていません）。
+</div>
+
+<div class="sheet">
+  <p class="p-event">北中城村ウェルネススポーツフェスタ2026</p>
+  <h1 class="p-title">当日の来場登録</h1>
+  <p class="p-lead">並んでいる間に、こちらから<br>来場登録をお願いします</p>
+  <div class="p-qr" id="poster-qr"></div>
+  <p class="p-scan">スマホのカメラで読み取ってください</p>
+  <ol class="p-steps">
+    <li><span class="n">1</span><span><b>名前・生年月日・住所・電話番号</b>を入れて送信</span></li>
+    <li><span class="n">2</span><span>出てきた<b>QRを受付でお見せください</b></span></li>
+  </ol>
+  <p class="p-nophone">スマホがない方は、受付でお書きください</p>
+  <p class="p-foot">入力した内容は、イベント保険の登録とこのイベントの連絡だけに使います。<br>主催：北中城村（企画振興課）／運営：北中城村観光協会</p>
+</div>
+
+<script src="qr.js?v=20261111a"></script>
+<script>
+(function () {
+  "use strict";
+  /* 当日の来場登録ページ（お客様が自分のスマホで入れる）。QRはこの端末の中で作ります */
+  var URL_ONSITE = "https://yuidocoro-wq.github.io/kitanaka-festa-2026/reserve.html?mode=visit&onsite=1";
+  var box = document.getElementById("poster-qr");
+  var svg = "";
+  try { svg = (window.FestaQR) ? window.FestaQR.svg(URL_ONSITE) : ""; } catch (e) { svg = ""; }
+  if (svg) box.innerHTML = svg;
+  else box.innerHTML = '<p class="p-err">QRコードを作れませんでした。qr.js が読み込めているか確かめてください。</p>';
+})();
+</script>
+</body>
+</html>

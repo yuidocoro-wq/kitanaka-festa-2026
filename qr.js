@@ -1,5 +1,7 @@
 /* qr.js — 予約番号のQRコードを画面に出す（2026-10-16）
  * 受付係（GAS）がメールに入れているQRと同じ作り方（バイトモード・誤り訂正M・型番1〜3）。
+ * 2026-11-11 当日受付の看板（onsite-poster.html）でURLを入れるため、型番4〜6（〜84文字）も作れるようにした。
+ *   予約番号（〜26文字）は今までどおり型番1〜3で、出てくるQRは前と同じ。
  * 外部サービスを使わず、この端末の中だけで作ります（予約番号を外に送らない）。
  * 使い方: FestaQR.svg("KF-0001") → <svg> の文字列
  */
@@ -40,12 +42,24 @@ var QR_ = (function () {
     return res.slice(data.length);
   }
 
-  // レベルM : [総コード語数, データコード語数]
-  var SPEC = { 1: [26, 16], 2: [44, 28], 3: [70, 44] };
+  // レベルM : [総コード語数, データコード語数, ブロック数]（型番4〜6はブロックに分けて交互に並べる）
+  var SPEC = { 1: [26, 16, 1], 2: [44, 28, 1], 3: [70, 44, 1], 4: [100, 64, 2], 5: [134, 86, 2], 6: [172, 108, 4] };
+  var MAX_VER = 6;   // 型番7からは「型番情報」が要るので作らない
 
   function pickVersion(len) {
-    for (var v = 1; v <= 3; v++) if (len <= SPEC[v][1] - 2) return v;
+    for (var v = 1; v <= MAX_VER; v++) if (len <= SPEC[v][1] - 2) return v;
     return 0;
+  }
+
+  /* データを同じ大きさのブロックに分け、ブロックごとに誤り訂正を作って、交互に並べる（1ブロックなら そのまま data＋ec） */
+  function interleave(data, version) {
+    var blocks = SPEC[version][2], dPer = SPEC[version][1] / blocks, ePer = (SPEC[version][0] - SPEC[version][1]) / blocks;
+    if (blocks === 1) return data.concat(rsEc(data, ePer));
+    var ds = [], es = [], out = [], b, i;
+    for (b = 0; b < blocks; b++) { ds.push(data.slice(b * dPer, (b + 1) * dPer)); es.push(rsEc(ds[b], ePer)); }
+    for (i = 0; i < dPer; i++) for (b = 0; b < blocks; b++) out.push(ds[b][i]);
+    for (i = 0; i < ePer; i++) for (b = 0; b < blocks; b++) out.push(es[b][i]);
+    return out;
   }
 
   function toBytes(text) {
@@ -118,7 +132,7 @@ var QR_ = (function () {
     setFinder(0, 0); setFinder(0, size - 7); setFinder(size - 7, 0);
 
     if (version >= 2) {
-      var ctr = (version === 2) ? 18 : 22, rr, cc;
+      var ctr = version * 4 + 10, rr, cc;   // 位置合わせの印の中心（型番2=18・3=22・4=26・5=30・6=34）
       for (rr = -2; rr <= 2; rr++) for (cc = -2; cc <= 2; cc++) {
         m[ctr + rr][ctr + cc] = (rr === -2 || rr === 2 || cc === -2 || cc === 2 || (rr === 0 && cc === 0));
       }
@@ -212,8 +226,7 @@ var QR_ = (function () {
     var bytes = toBytes(text), version = pickVersion(bytes.length);
     if (version === 0) return null;
     var data = makeDataCodewords(bytes, version);
-    var ec = rsEc(data, SPEC[version][0] - SPEC[version][1]);
-    var all = data.concat(ec);
+    var all = interleave(data, version);
     var best = null, bestScore = -1, mask, m, s;
     for (mask = 0; mask < 8; mask++) {
       m = buildMatrix(all, version, mask);

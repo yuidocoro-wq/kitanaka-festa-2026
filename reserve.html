@@ -56,7 +56,7 @@
 
         <div class="field">
           <label for="f-address"><span class="stepno">2</span>住所（代表の方）<span class="req">必須</span></label>
-          <div class="chara-tip no-print"><img src="img/chara/yukurin.png" alt="中ゆくりん" width="284" height="320"><p>住所と連絡先を入れてね。メールに番号が届くよ。</p></div>
+          <div class="chara-tip no-print"><img src="img/chara/yukurin.png" alt="中ゆくりん" width="284" height="320"><p id="chara-tip-addr">住所と連絡先を入れてね。メールに番号が届くよ。</p></div>
           <p class="hint">保険の登録に使います。例：北中城村字仲順435</p>
           <input type="text" id="f-address" name="address" autocomplete="street-address" required>
         </div>
@@ -67,7 +67,7 @@
         </div>
 
         <div class="field">
-          <label for="f-email">メールアドレス<span class="req">必須</span></label>
+          <label for="f-email" id="email-label">メールアドレス<span class="req">必須</span></label>
           <p class="hint" id="email-hint">予約番号のついたメールが届きます。</p>
           <input type="email" id="f-email" name="email" autocomplete="email" inputmode="email" required>
         </div>
@@ -94,7 +94,7 @@
           <label class="check">
             <input type="checkbox" id="f-agree">
             <span class="t">
-              <b>確認メールを受け取ることに同意します</b>
+              <b id="agree-title">確認メールを受け取ることに同意します</b>
               <span id="agree-note">予約番号のついたメールをお送りします。お名前・生年月日・住所・連絡先は、イベント保険の登録とこのイベントの連絡だけに使います。</span>
             </span>
           </label>
@@ -179,7 +179,7 @@
 <script src="config.js?v=20261016a"></script>
 <script src="booths.js?v=20261110b"></script>
 <script src="app.js?v=20261102b"></script>
-<script src="qr.js?v=20261016a"></script>
+<script src="qr.js?v=20261111a"></script>
 <script>
 (function () {
   "use strict";
@@ -189,6 +189,9 @@
 
   /* 来場のみモード（reserve.html?mode=visit）：体験をえらばず、来る方の名簿だけをいただく */
   var visitMode = (F.qs("mode") === "visit");
+  /* 当日の来場登録（reserve.html?mode=visit&onsite=1・2026-11-11）：会場の看板のQRから、お客様が自分のスマホで入れる。
+     来場登録と同じ項目で、メールは任意・確認メールは送らない・完了画面のQRを受付で見せる・入力をこの端末に覚えない */
+  var onsiteMode = visitMode && F.qs("onsite") === "1";
 
   var mainId = visitMode ? "" : F.qs("booth");
   var mainBooth = F.booth(mainId);
@@ -215,6 +218,23 @@
     F.$("#field-other").hidden = true;
     F.$("#field-more").hidden = true;
     F.$("#field-childage").hidden = true;
+    if (onsiteMode) {
+      document.title = "当日の来場登録｜北中城村ウェルネススポーツフェスタ2026";
+      F.$(".wm-sub").textContent = "当日の来場登録";
+      F.$("#form-title").innerHTML = '<span class="bar"></span>当日の来場登録';
+      F.$("#chara-hello-t").textContent = "めんそーれ！並んでいるあいだに、来場登録をしてね。いっしょに来たみんなのお名前を教えてね。";
+      head.innerHTML = "<h3>当日の来場登録</h3>" +
+        '<p class="muted">イベントの保険に登録するため、会場に入る方はみなさん受付をお願いしています。</p>' +
+        '<p style="font-weight:700;">入力が終わったら、出てくるQRコードを受付でお見せください。</p>' +
+        '<p class="muted">空いているブースには、その場で入っていただけます（ご予約の方が先になります）。</p>';
+      F.$("#people-hint").textContent = "保険の登録のため、いっしょに来た方を全員ご記入ください（お子さまも）。";
+      F.$("#chara-tip-addr").textContent = "住所と電話番号を入れてね。";
+      F.$("#email-label").innerHTML = 'メールアドレス<span class="opt">任意</span>';
+      F.$("#email-hint").textContent = "なくても登録できます。";
+      F.$("#f-email").required = false;
+      F.$("#agree-title").textContent = "入力した内容を、イベントの保険の登録に使うことに同意します";
+      F.$("#agree-note").textContent = "お名前・生年月日・住所・連絡先は、イベント保険の登録とこのイベントの連絡だけに使います。";
+    }
   } else if (groupBooth) {
     var gp = F.provisionalNote(groupBooth), gh = [];
     gh.push("<h3>" + esc(groupBooth.name) + (gp ? '<span class="tag-provisional">' + esc(gp) + "</span>" : "") + "</h3>");
@@ -312,9 +332,11 @@
   /* ---------- 前回の入力をこの端末だけに覚えておく（ほかの体験も予約しやすく） ---------- */
   var SAVE_KEY = "kitanaka_festa_form";
   function saveForm(people) {
+    if (onsiteMode) return;   /* 当日モードは覚えない（借りたスマホで入れたとき、次の人に前の人の情報が出ないように） */
     try { localStorage.setItem(SAVE_KEY, JSON.stringify({ people: people, address: F.$("#f-address").value, phone: F.$("#f-phone").value, email: F.$("#f-email").value })); } catch (e) { }
   }
   function loadForm() {
+    if (onsiteMode) return;   /* 当日モードは前回の入力を出さない */
     var v = null; try { v = JSON.parse(localStorage.getItem(SAVE_KEY) || "null"); } catch (e) { v = null; }
     if (!v || !v.people || !v.people.length) return;
     peopleEl.innerHTML = "";
@@ -510,7 +532,7 @@
   /* ---------- 送信 ---------- */
   var msgArea = F.$("#msg-area");
   var btn = F.$("#submit-btn");
-  var SUBMIT_LABEL = visitMode ? "この内容で来場登録する" : "この内容で予約する";
+  var SUBMIT_LABEL = onsiteMode ? "この内容で登録してQRを出す" : (visitMode ? "この内容で来場登録する" : "この内容で予約する");
   btn.textContent = SUBMIT_LABEL;
 
   /* 受付開始前（config.js の openAt）は送れないようにして、開始日を案内する */
@@ -579,9 +601,12 @@
     }
     if (!address) { showMsg("err", "住所をご記入ください。保険の登録に使います。"); F.$("#f-address").focus(); return; }
     if (!phone) { showMsg("err", "電話番号をご記入ください。当日のご連絡に使います。"); F.$("#f-phone").focus(); return; }
-    if (!email || email.indexOf("@") < 1) { showMsg("err", "メールアドレスをご確認ください。確認メールのお届け先になります。"); F.$("#f-email").focus(); return; }
+    if (onsiteMode) {
+      /* 当日モードはメール任意。入っているときだけ形を確かめる */
+      if (email && email.indexOf("@") < 1) { showMsg("err", "メールアドレスをご確認ください（なくても登録できます。空にしてもかまいません）。"); F.$("#f-email").focus(); return; }
+    } else if (!email || email.indexOf("@") < 1) { showMsg("err", "メールアドレスをご確認ください。確認メールのお届け先になります。"); F.$("#f-email").focus(); return; }
     if (!visitMode && !ids.length) { showMsg("err", groupBooth ? "時間（部）を1つえらんでください。" : "予約したい体験を1つ以上お選びください。"); return; }
-    if (!F.$("#f-agree").checked) { showMsg("err", "「確認メールを受け取ることに同意します」にチェックをお願いします。"); return; }
+    if (!F.$("#f-agree").checked) { showMsg("err", onsiteMode ? "「入力した内容を、イベントの保険の登録に使うことに同意します」にチェックをお願いします。" : "「確認メールを受け取ることに同意します」にチェックをお願いします。"); return; }
 
     var payload = {
       action: "reserve",
@@ -602,6 +627,7 @@
       note: F.$("#f-note").value.trim()
     };
     if (visitMode) payload.visitOnly = true;   /* 体験なし＝来場のみの印 */
+    if (onsiteMode) payload.onsite = true;     /* 当日の来場登録の印（受付係は確認メールを送らない） */
 
     btn.disabled = true;
     btn.textContent = "送っています…";
@@ -669,6 +695,52 @@
     }
     if (queued) F.$("#t-splash-s").textContent = "ご予約は確定しています。確認メールは少し遅れて届きます。";
     F.$("#t-name").textContent = name + " 様" + (people.length > 1 ? "（ほか" + (people.length - 1) + "名）" : "");
+
+    /* ---- 当日の来場登録の完了画面（2026-11-11）：QRを大きく・「受付で見せて」を大きく・メールの話はしない ---- */
+    if (onsiteMode) {
+      F.$("#t-splash-t").textContent = "この画面を受付で見せてください";
+      F.$("#t-splash-t").style.fontSize = "30px";
+      F.$("#t-splash-s").textContent = "受付で下のQRコードを読み取ります。読み取りが終わるまで、この画面を閉じないでください。";
+      F.$("#t-splash-s").style.fontSize = "18px";
+      F.$("#t-splash-s").style.color = "#222";
+      F.$("#t-no-label").textContent = "受付番号";
+      F.$("#t-qr").style.width = "300px";
+      F.$("#t-qr").style.maxWidth = "86%";
+      F.$("#t-qr-cap").textContent = "受付で、このQRコードをお見せください";
+      F.$("#t-qr-cap").style.fontSize = "18px";
+      F.$("#t-qr-cap").style.fontWeight = "700";
+      F.$("#t-qr-cap").style.color = "#222";
+      F.$("#t-row-booths").hidden = true;
+      F.$("#t-row-meet").hidden = true;
+      F.$("#t-date").textContent = E.dateLabel + "　" + E.time;
+      F.$("#t-venue").textContent = E.venue;
+      F.$("#t-qr-note").hidden = true;
+      F.$("#t-shot").innerHTML = "QRが読み取れないときは、受付番号「" + esc(no) + "」をお伝えください。";
+      F.$("#t-mail").hidden = true;
+      F.$("#step-arrive").textContent = "受付で、この画面のQRコードをお見せください。";
+      F.$("#step-show").textContent = "受付が終わったら、会場へお入りください。";
+      F.$("#step-meet").innerHTML = "<span class='step-body'>空いているブースには、その場で入っていただけます。<br><span class='small'>ご予約の方が先になります。どのブースが空いているかは、会場のスタッフにお尋ねください。</span></span>";
+      F.$("#t-more").hidden = true;
+      F.$("#t-more-note").hidden = true;
+      F.$("#t-cancel-note").hidden = true;
+      var cheer = F.$(".chara-cheer-t"); if (cheer) cheer.textContent = "受付でまってるね！";
+      /* QRがスクロールしないで見えるように、上のキャラと✓マークは出さない */
+      var cheerImgs = F.$(".chara-cheer"); if (cheerImgs) cheerImgs.hidden = true;
+      var chk = F.$("#done-area .splash > svg"); if (chk) chk.style.display = "none";
+      if (cheer) cheer.hidden = true;
+      F.$("#t-map").href = F.mapUrl();
+      F.$("#t-contact").textContent = E.contact;
+      /* 予約番号もこの端末に覚えない（借りたスマホのとき、次の人に出さないため） */
+      /* スマホでは上のメニューが大きいので、「この画面を受付で見せてください」が画面の一番上に来るところまで送る。
+         （少し送るとメニューが小さくなって位置がずれるので、2回に分けて合わせる） */
+      window.scrollTo(0, 200);
+      window.setTimeout(function () {
+        var sp = F.$("#done-area .splash"), hd = F.$(".site-head");
+        var y = sp.getBoundingClientRect().top + (window.pageYOffset || 0) - (hd ? hd.getBoundingClientRect().height : 0) - 8;
+        window.scrollTo(0, Math.max(0, y));
+      }, 120);
+      return;
+    }
 
     /* ---- 来場のみの完了画面（体験の一覧と集合のきまりは出さない） ---- */
     if (visitMode) {
