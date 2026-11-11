@@ -258,7 +258,7 @@
       '<p class="small" style="margin:0 0 6px;font-weight:700;">' + (i === 0 ? "代表の方" : "いっしょに来る方") + '</p>' +
       '<div class="field" style="margin-bottom:10px;"><label>お名前</label><input type="text" class="p-name" autocomplete="name"></div>' +
       '<div class="field" style="margin-bottom:10px;"><label>生年月日</label><input type="text" class="p-birth" inputmode="numeric" placeholder="例：1985/4/1"></div>' +
-      '<div class="field" style="margin-bottom:10px;"><label>大人・子ども</label><select class="p-kind"><option value="大人">大人</option><option value="子ども">子ども（中学生まで）</option></select></div>' +
+      '<div class="field" style="margin-bottom:10px;"><label>大人・子ども <span class="small" style="font-weight:400;">（生年月日から自動で入ります）</span></label><select class="p-kind"><option value="大人">大人</option><option value="子ども">子ども（中学生まで）</option></select></div>' +
       (visitMode ? "" : '<div class="p-booths"><p class="small" style="margin:0 0 4px;font-weight:700;">この方が受ける体験（チェック）</p><div class="p-booth-list"></div></div>') +
       (i > 0 ? '<button type="button" class="btn btn-quiet p-del" style="min-height:40px;margin:6px 0 0;">この行を消す</button>' : "") +
       "</div>";
@@ -280,10 +280,15 @@
       if (!box) return;
       var prev = {}; F.$$("input", box).forEach(function (i) { prev[i.value] = i.checked; });
       if (!list.length) { box.innerHTML = '<p class="small" style="margin:0;">体験をえらぶと、ここに出ます。</p>'; return; }
+      /* 2026-11-11 集団の体験（運動あそび・クバトレなど）は、いっしょに来る方にも最初からチェックを入れる。
+         ケアブース（1人1枠）とレース（1組で1枠）は、今までどおり代表の方だけ */
+      var anyGroup = false;
       box.innerHTML = list.map(function (b) {
-        var on = (b.id in prev) ? prev[b.id] : (idx === 0);
+        var group = !F.isCareBooth(b.id) && !F.isRace(b);
+        if (group) anyGroup = true;
+        var on = (b.id in prev) ? prev[b.id] : (idx === 0 || group);
         return '<label class="check" style="margin-bottom:6px;padding:8px 10px;"><input type="checkbox" class="p-b" value="' + esc(b.id) + '"' + (on ? " checked" : "") + '><span class="t"><b style="font-size:16px;">' + esc(boothLabel(b)) + "</b></span></label>";
-      }).join("");
+      }).join("") + (anyGroup && idx > 0 ? '<p class="small" style="margin:2px 0 0;">見学だけの方は、チェックを外してください。</p>' : "");
     });
   }
   addPerson();
@@ -375,7 +380,19 @@
     var f = F.$("#f-childage");
     if (f.getAttribute("data-auto") === "1") f.value = parts.join("／");
   }
-  peopleEl.addEventListener("input", function (e) { if (e.target.matches(".p-birth, .p-name")) refreshAges(); });
+  /* 2026-11-11 生年月日が読めたら「大人・子ども」を自動で切り替える（中学生まで＝子ども）。
+     開催日の学年で数える：2026年度なら 2011/4/2 以降に生まれた方が中学生まで。あとから手で直すこともできます */
+  function autoKind(row) {
+    var b = parseBirth(row.querySelector(".p-birth").value);
+    if (!b) return;
+    var sy = EV.m >= 4 ? EV.y : EV.y - 1, fromY = sy - 15;
+    var child = b.y > fromY || (b.y === fromY && (b.m > 4 || (b.m === 4 && b.d >= 2)));
+    row.querySelector(".p-kind").value = child ? "子ども" : "大人";
+  }
+  peopleEl.addEventListener("input", function (e) {
+    if (e.target.matches(".p-birth")) autoKind(e.target.closest("[data-person]"));
+    if (e.target.matches(".p-birth, .p-name")) refreshAges();
+  });
   peopleEl.addEventListener("change", function (e) { if (e.target.matches(".p-kind, .p-birth")) refreshAges(); });
   F.$("#f-childage").addEventListener("input", function () { this.setAttribute("data-auto", this.value.trim() ? "0" : "1"); if (!this.value.trim()) refreshAges(); });
   refreshAges();
