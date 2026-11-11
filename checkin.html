@@ -476,14 +476,27 @@
     /* 来場のみの方が、その場で空いているブースに入ったときの記録 */
     var spot = F.$("#r-spot");
     if (visitOnly) {
-      var list = F.DATA.booths.filter(function (b) { return !b.slots; });
       spot.hidden = false;
-      spot.innerHTML = '<p class="small" style="margin:0 0 6px;font-weight:700;">その場で入ったブースを記録する（任意）</p>' +
-        '<select id="spot-booth" style="width:100%;min-height:48px;font-size:16px;font-family:inherit;margin-bottom:8px;">' +
-        list.map(function (b) { return '<option value="' + esc(b.id) + '">' + esc(b.name) + "</option>"; }).join("") +
-        "</select>" +
-        '<button type="button" class="btn btn-line" id="spot-btn" style="margin-bottom:0;">このブースに入った</button>';
-      F.$("#spot-btn").addEventListener("click", function () { spotJoin(p.no, this); });
+      spot.innerHTML = '<p class="small" style="margin:0;">いま案内できるブースを調べています…</p>';
+      var spotNo = p.no;
+      var drawSpot = function (stat) {
+        if (F.$("#r-no").textContent !== spotNo) return;   /* 調べている間に別の人に切り替わったら描かない */
+        var opts = spotOptions(stat);
+        spot.innerHTML = '<p class="small" style="margin:0 0 6px;font-weight:700;">いま案内できるブース（入ったら記録・任意）</p>' +
+          (opts.length
+            ? '<select id="spot-booth" style="width:100%;min-height:48px;font-size:16px;font-family:inherit;margin-bottom:8px;">' +
+              '<option value="">（入ったブースがあれば選ぶ）</option>' +
+              opts.map(function (o) {
+                return '<option value="' + esc(o.id) + '" data-name="' + esc(o.name) + '" data-time="' + esc(o.time) + '">' + esc(o.label) + "</option>";
+              }).join("") +
+              "</select>" +
+              '<button type="button" class="btn btn-line" id="spot-btn" style="margin-bottom:0;">このブースに入った</button>' +
+              (stat ? "" : '<p class="small" style="margin:6px 0 0;">※ 残りの数を読めなかったので、全部のブースを出しています</p>')
+            : '<p class="small" style="margin:0;">いま案内できるブースはありません。</p>');
+        var sb = F.$("#spot-btn");
+        if (sb) sb.addEventListener("click", function () { spotJoin(spotNo, this); });
+      };
+      F.fetchStatus().then(drawSpot).catch(function () { drawSpot(null); });
     } else {
       spot.hidden = true;
       spot.innerHTML = "";
@@ -509,11 +522,57 @@
     F.$("#result-card").scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
+  /* いま案内できるブースの一覧（2026-11-11）
+     ・集団の体験（運動あそび・クバトレ・レース）… 終わりの時刻を過ぎていない＋予約（と受付で記録した人）で枠が埋まっていないものだけ。残りの数つき。
+       事前予約の「受付中」（締め切り）は見ない。当日は空いていれば入れるため。
+     ・ケアブース（足もみ・整体・MK2・クバトレのコンディショニング）… 予約はそれぞれの時間の最初の数分だけなので、
+       予約で埋まっていても空いている時間に入れる。同じ名前の枠は1行にまとめ、15:00まで出す。
+     ・時刻で消すのは開催日（booths.json の event.date）だけ。前日までのリハーサルでは全部出る。
+     stat … fetchStatus() の結果（読めなかったときは null → 残りの数なしで全部出す） */
+  function spotOptions(stat) {
+    var now = new Date(Date.now() + 9 * 3600 * 1000);   /* 日本時間 */
+    var today = now.getUTCFullYear() + "-" + ("0" + (now.getUTCMonth() + 1)).slice(-2) + "-" + ("0" + now.getUTCDate()).slice(-2);
+    var isDay = (today === String((F.DATA.event || {}).date || ""));
+    var nowMin = now.getUTCHours() * 60 + now.getUTCMinutes();
+    var toMin = function (s) { var m = /(\d{1,2}):(\d{2})/.exec(s || ""); return m ? Number(m[1]) * 60 + Number(m[2]) : null; };
+    var endMin = function (t) { var m = /〜\s*(\d{1,2}:\d{2})/.exec(t || ""); return m ? toMin(m[1]) : null; };
+    var parentOf = {};
+    F.DATA.booths.forEach(function (b) { (b.slots || []).forEach(function (s) { parentOf[s] = b; }); });
+
+    var group = [], care = [], seen = {};
+    F.DATA.booths.forEach(function (b) {
+      if (b.slots) return;
+      if (F.isCareBooth(b.id)) {
+        if (isDay && nowMin >= 15 * 60) return;
+        var par = parentOf[b.id];
+        var key = par ? par.id : b.id;
+        if (seen[key]) return;
+        seen[key] = true;
+        var nm = par ? par.name : String(b.name || "").replace(/\s*\d{1,2}:\d{2}の枠$/, "");
+        care.push({ id: key, name: nm, time: "", label: nm + "（空いている時間に）" });
+        return;
+      }
+      var end = endMin(b.time);
+      if (isDay && end !== null && nowMin >= end) return;
+      var left = null;
+      if (stat && stat[b.id]) {
+        left = Math.max(0, Number(stat[b.id].capacity || 0) - Number(stat[b.id].reserved || 0));
+        if (left <= 0) return;
+      }
+      group.push({ id: b.id, name: b.name, time: b.time || "", start: toMin(b.time),
+        label: b.name + "　" + (b.time || "") + (left !== null ? "（残り" + left + (F.isRace(b) ? "組" : "名") + "）" : "") });
+    });
+    group.sort(function (a, b) { return (a.start || 0) - (b.start || 0); });
+    return group.concat(care);
+  }
+
   /* 予約していないブースに、その場で入ったことを記録する（来場のみの方むけ） */
   function spotJoin(no, btn) {
     var sel = F.$("#spot-booth");
-    if (!sel || !sel.value) return;
-    var b = F.booth(sel.value);
+    if (!sel) return;
+    if (!sel.value) { box(F.$("#desk-msg"), "err", "入ったブースを選んでから押してください。"); return; }
+    var opt = sel.options[sel.selectedIndex];
+    var b = F.booth(sel.value) || { name: opt.getAttribute("data-name") || sel.value, time: opt.getAttribute("data-time") || "" };
     btn.disabled = true; btn.textContent = "記録しています…";
     var finish = function (ok, msg) {
       btn.disabled = false; btn.textContent = "このブースに入った";
