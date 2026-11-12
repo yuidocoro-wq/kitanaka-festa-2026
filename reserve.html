@@ -331,14 +331,31 @@
 
   /* ---------- 前回の入力をこの端末だけに覚えておく（ほかの体験も予約しやすく） ---------- */
   var SAVE_KEY = "kitanaka_festa_form";
+  var clearingSaved = false;   /* 「入力を消す」を押したあとは、閉じる前の自動保存で書き戻さない */
+  function hasSavedContent(v) {
+    if (!v) return false;
+    if ((v.address || "").trim() || (v.phone || "").trim() || (v.email || "").trim()) return true;
+    return (v.people || []).some(function (pp) { return (pp.name || "").trim() || (pp.birth || "").trim(); });
+  }
   function saveForm(people) {
-    if (onsiteMode) return;   /* 当日モードは覚えない（借りたスマホで入れたとき、次の人に前の人の情報が出ないように） */
-    try { localStorage.setItem(SAVE_KEY, JSON.stringify({ people: people, address: F.$("#f-address").value, phone: F.$("#f-phone").value, email: F.$("#f-email").value })); } catch (e) { }
+    if (onsiteMode || clearingSaved) return;   /* 当日モードは覚えない（借りたスマホで入れたとき、次の人に前の人の情報が出ないように） */
+    var v = { people: people, address: F.$("#f-address").value, phone: F.$("#f-phone").value, email: F.$("#f-email").value };
+    try {
+      if (hasSavedContent(v)) localStorage.setItem(SAVE_KEY, JSON.stringify(v));
+      else localStorage.removeItem(SAVE_KEY);
+    } catch (e) { }
+  }
+  /* 2026-11-12 打ったそばから、この端末に覚える（送信前に「ブース一覧にもどる」を押しても消えない。ほかの体験の予約でも同じ名前が入る） */
+  /* このページで手を入れたときだけ覚えなおす（何も触っていないページを閉じたときに、ほかのタブで入れた内容を空で上書きしない） */
+  var touched = false;
+  function saveDraft(e) {
+    if (e && e.type !== "pagehide") touched = true;
+    if (touched) saveForm(readPeople());
   }
   function loadForm() {
     if (onsiteMode) return;   /* 当日モードは前回の入力を出さない */
     var v = null; try { v = JSON.parse(localStorage.getItem(SAVE_KEY) || "null"); } catch (e) { v = null; }
-    if (!v || !v.people || !v.people.length) return;
+    if (!v || !v.people || !v.people.length || !hasSavedContent(v)) return;
     peopleEl.innerHTML = "";
     v.people.forEach(function (pp, i) {
       peopleEl.insertAdjacentHTML("beforeend", personRow(i));
@@ -351,14 +368,22 @@
     F.$("#f-phone").value = v.phone || ""; F.$("#f-email").value = v.email || "";
     var m = document.createElement("div");
     m.className = "msg msg-info";
-    m.innerHTML = "前回の入力を入れてあります（このスマホの中だけに覚えています）。ちがう方の予約なら <button type=\"button\" class=\"btn btn-quiet\" id=\"clear-saved\" style=\"display:inline-flex;width:auto;min-height:36px;padding:4px 12px;margin:0;font-size:15px;\">入力を消す</button>";
+    m.innerHTML = "前に入力した内容を入れてあります（このスマホの中だけに覚えています）。ちがう方の予約なら <button type=\"button\" class=\"btn btn-quiet\" id=\"clear-saved\" style=\"display:inline-flex;width:auto;min-height:36px;padding:4px 12px;margin:0;font-size:15px;\">入力を消す</button>";
     F.$("#field-people").insertBefore(m, F.$("#people-list"));
     F.$("#clear-saved").addEventListener("click", function () {
+      clearingSaved = true;
       try { localStorage.removeItem(SAVE_KEY); } catch (e) { }
       location.reload();
     });
   }
   loadForm();
+  if (!onsiteMode) {
+    F.$("#form").addEventListener("input", saveDraft);
+    F.$("#form").addEventListener("change", saveDraft);
+    /* 行を消したときも覚えなおす（消すボタンの処理のあとに動くよう、少し待つ） */
+    peopleEl.addEventListener("click", function (e) { if (e.target.closest && e.target.closest(".p-del")) window.setTimeout(function () { saveDraft({ type: "delete" }); }, 0); });
+    window.addEventListener("pagehide", saveDraft);
+  }
 
   /* ---------- レース系だけ月齢・年齢をきく ---------- */
   var childAgeField = F.$("#field-childage");
