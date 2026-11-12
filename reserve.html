@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>体験の予約｜北中城村ウェルネススポーツフェスタ2026</title>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700&family=M+PLUS+1p:wght@400;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=20261028a">
+<link rel="stylesheet" href="style.css?v=20261113a">
 </head>
 <body>
 
@@ -178,7 +178,7 @@
 
 <script src="config.js?v=20261016a"></script>
 <script src="booths.js?v=20261110b"></script>
-<script src="app.js?v=20261102b"></script>
+<script src="app.js?v=20261113a"></script>
 <script src="qr.js?v=20261111a"></script>
 <script>
 (function () {
@@ -606,6 +606,7 @@
     for (var pi = 0; pi < people.length; pi++) {
       if (!people[pi].name) { showMsg("err", (pi + 1) + "人目のお名前をご記入ください。"); return; }
       if (!people[pi].birth) { showMsg("err", people[pi].name + " さんの生年月日をご記入ください。保険の登録に使います。"); return; }
+      if (!parseBirth(people[pi].birth)) { showMsg("err", "生年月日は 1985/04/01 のように年・月・日まで正しく入れてください（数字8けたでも入ります）"); return; }
     }
     if (!people.length) { showMsg("err", "参加する人をご記入ください。"); return; }
     var adultsN = 0, childrenN = 0, joinN = 0;
@@ -682,7 +683,7 @@
         F.$("#sending").hidden = true;
         btn.disabled = false;
         btn.textContent = SUBMIT_LABEL;
-        showMsg("err", F.friendlyError(j && j.error, j && (j.full || j.who)));
+        showMsg("err", (j && j.error === "invalid" && j.message) ? j.message : F.friendlyError(j && j.error, j && (j.full || j.who)));
       }
     }).catch(function () {
       F.$("#sending").hidden = true;

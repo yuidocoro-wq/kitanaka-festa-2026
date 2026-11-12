@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>当日受付｜北中城村ウェルネススポーツフェスタ2026</title>
 <meta name="robots" content="noindex">
-<link rel="stylesheet" href="style.css?v=20261028a">
+<link rel="stylesheet" href="style.css?v=20261113a">
 </head>
 <body class="checkin-body">
 
@@ -30,6 +30,9 @@
 
     <!-- ② 受付本体 -->
     <section id="desk-area" hidden>
+      <div style="display:flex;justify-content:flex-end;margin:-8px 0 10px;">
+        <button type="button" class="btn btn-line" id="lock-btn" style="width:auto;min-height:36px;padding:6px 12px;font-size:14px;margin:0;">ロック画面にもどる（合言葉を入れ直す）</button>
+      </div>
 
       <div class="card">
         <h2>予約の確認</h2>
@@ -38,7 +41,10 @@
           <button type="button" class="btn btn-line" id="scan-stop" hidden>カメラを止める</button>
         </div>
         <label class="btn btn-line" style="margin-top:8px;">写真でQRを読む（カメラが動かないとき）<input type="file" id="photo-qr" accept="image/*" capture="environment" hidden></label>
-        <label class="check" style="margin-top:8px;"><input type="checkbox" id="auto-checkin" checked><span class="t"><b>QRを読んだら、そのまま「来場」にする</b><span>外すと、名前を見てから「来場にする」を押す形になります</span></span></label>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;">
+          <label class="check" style="flex:1 1 240px;margin-bottom:0;"><input type="checkbox" id="auto-checkin" checked><span class="t"><b>QRを読んだら、そのまま「来場」にする</b><span>外すと、名前を見てから「来場にする」を押す形になります</span></span></label>
+          <label class="check" style="flex:1 1 190px;margin-bottom:0;"><input type="checkbox" id="sound-on" checked><span class="t"><b>🔊 読み取り音を鳴らす</b><span>完了・2回目・取消を音と振動でお知らせ</span></span></label>
+        </div>
         <div id="reader-box" hidden>
           <video id="video" playsinline muted></video>
           <div class="reader-guide"></div>
@@ -73,6 +79,7 @@
 
       <!-- 照会結果 -->
       <div class="card" id="result-card" hidden>
+        <div id="r-banner" class="r-banner" hidden></div>
         <p class="person-no" id="r-no"></p>
         <p class="person-name" id="r-name"></p>
         <p id="r-kana" class="muted"></p>
@@ -81,6 +88,12 @@
         <div id="r-booths"></div>
         <div id="r-spot" hidden style="margin-top:12px;"></div>
         <div id="r-actions" style="margin-top:16px;"></div>
+        <div id="r-booth-mode-wrap" style="margin-top:14px;padding-top:10px;border-top:1px dashed #4A463B;">
+          <label class="small" style="display:inline-flex;align-items:center;gap:8px;cursor:pointer;color:#C9C3B4;">
+            <input type="checkbox" id="booth-staff-mode" style="width:20px;height:20px;accent-color:#2F6B5A;">
+            <span>ブース担当者用（「体験おわり」ボタンを押す）</span>
+          </label>
+        </div>
       </div>
 
       <!-- 予約なしの方の来場登録 -->
@@ -111,12 +124,16 @@
 <script src="jsQR.js?v=20261016a"></script>
 <script src="config.js?v=20261016a"></script>
 <script src="booths.js?v=20261110b"></script>
-<script src="app.js?v=20261102b"></script>
+<script src="app.js?v=20261113a"></script>
 <script>
 (function () {
   "use strict";
   var F = window.Festa, esc = F.esc;
   var PIN = "";
+  var PIN_STORAGE_KEY = "kitanaka_checkin_pin";
+  var SOUND_STORAGE_KEY = "kitanaka_checkin_sound";
+  var BOOTH_MODE_KEY = "kitanaka_booth_staff_mode";
+  var demoCame = {};
 
   F.showDemoBar("テスト表示中です（受付係がまだつながっていないため、記録は残りません）");
 
@@ -124,39 +141,171 @@
     el.innerHTML = '<div class="msg msg-' + kind + '">' + esc(text) + "</div>";
   }
 
-  /* ---------- ① PIN ---------- */
+  /* ---------- 確認音（Web Audio API）＆バイブレーション ---------- */
+  var audioCtx = null;
+  var soundChk = F.$("#sound-on");
+  try {
+    var savedSound = sessionStorage.getItem(SOUND_STORAGE_KEY) || localStorage.getItem(SOUND_STORAGE_KEY);
+    if (savedSound === "0") soundChk.checked = false;
+  } catch (e) { }
+  soundChk.addEventListener("change", function () {
+    var v = soundChk.checked ? "1" : "0";
+    try { sessionStorage.setItem(SOUND_STORAGE_KEY, v); localStorage.setItem(SOUND_STORAGE_KEY, v); } catch (e) { }
+    if (soundChk.checked) unlockAudio_();
+  });
+
+  function unlockAudio_() {
+    try {
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return null;
+      if (!audioCtx) audioCtx = new AC();
+      if (audioCtx.state === "suspended") audioCtx.resume();
+      return audioCtx;
+    } catch (e) { return null; }
+  }
+
+  function playTone_(ac, freq, startOffset, duration, type, gainVal) {
+    var osc = ac.createOscillator();
+    var g = ac.createGain();
+    osc.type = type || "sine";
+    osc.frequency.setValueAtTime(freq, ac.currentTime + startOffset);
+    g.gain.setValueAtTime(gainVal || 0.18, ac.currentTime + startOffset);
+    g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + startOffset + duration);
+    osc.connect(g);
+    g.connect(ac.destination);
+    osc.start(ac.currentTime + startOffset);
+    osc.stop(ac.currentTime + startOffset + duration);
+  }
+
+  /* kind: "scan"（ピッ） | "ok"（ピロリン♪） | "already"（ピピッ） | "err"（ブー） */
+  function playFeedback(kind) {
+    if (!soundChk || !soundChk.checked) return;
+    try {
+      if (navigator.vibrate) {
+        if (kind === "scan") navigator.vibrate(35);
+        else if (kind === "ok") navigator.vibrate([60, 40, 100]);
+        else if (kind === "already") navigator.vibrate([80, 60, 80]);
+        else if (kind === "err") navigator.vibrate([200, 80, 200]);
+      }
+    } catch (e) { }
+    try {
+      var ac = unlockAudio_();
+      if (!ac) return;
+      if (kind === "scan") {
+        playTone_(ac, 1200, 0, 0.06, "sine", 0.15);
+      } else if (kind === "ok") {
+        playTone_(ac, 880, 0, 0.09, "sine", 0.22);
+        playTone_(ac, 1318.5, 0.09, 0.18, "sine", 0.24);
+      } else if (kind === "already") {
+        playTone_(ac, 740, 0, 0.08, "triangle", 0.25);
+        playTone_(ac, 740, 0.13, 0.12, "triangle", 0.25);
+      } else if (kind === "err") {
+        playTone_(ac, 220, 0, 0.18, "sawtooth", 0.22);
+        playTone_(ac, 175, 0.16, 0.24, "sawtooth", 0.24);
+      }
+    } catch (e) { }
+  }
+
+  /* ---------- ブース担当者用（「体験おわり」ボタン誤タップ防止） ---------- */
+  var boothModeChk = F.$("#booth-staff-mode");
+  var resultCard = F.$("#result-card");
+  function syncBoothStaffMode_() {
+    var on = !!(boothModeChk && boothModeChk.checked);
+    resultCard.classList.toggle("is-booth-staff", on);
+    F.$$("[data-part]", resultCard).forEach(function (btn) {
+      btn.hidden = !on;
+    });
+  }
+  try {
+    if (sessionStorage.getItem(BOOTH_MODE_KEY) === "1") boothModeChk.checked = true;
+  } catch (e) { }
+  boothModeChk.addEventListener("change", function () {
+    try { sessionStorage.setItem(BOOTH_MODE_KEY, boothModeChk.checked ? "1" : "0"); } catch (e) { }
+    syncBoothStaffMode_();
+  });
+  syncBoothStaffMode_();
+
+  /* ---------- ① PIN（sessionStorage保持＆POST認証） ---------- */
+  function openDesk_(v) {
+    PIN = v;
+    try { sessionStorage.setItem(PIN_STORAGE_KEY, v); } catch (e) { }
+    F.$("#pin-area").hidden = true;
+    F.$("#desk-area").hidden = false;
+  }
+
+  function backToPinScreen_(errMsg) {
+    stopScan();
+    PIN = "";
+    try { sessionStorage.removeItem(PIN_STORAGE_KEY); } catch (e) { }
+    F.$("#desk-area").hidden = true;
+    F.$("#result-card").hidden = true;
+    F.$("#pin-area").hidden = false;
+    if (errMsg) box(F.$("#pin-msg"), "err", errMsg);
+    else F.$("#pin-msg").innerHTML = "";
+  }
+
+  function isAuthOrSetupError_(j) {
+    var code = j && j.error;
+    return code === "pin" || code === "auth" || code === "locked" || code === "setup";
+  }
+
+  function handleAuthError_(j) {
+    if (!isAuthOrSetupError_(j)) return false;
+    playFeedback("err");
+    var msg = (j.error === "setup")
+      ? "受付係の合言葉の設定が終わっていません（未設定か8文字より短い）。なつきさんに連絡してください。"
+      : F.friendlyError(j.error);
+    backToPinScreen_(msg);
+    return true;
+  }
+
+  /* すでにこのタブでPIN確認ずみなら、再読み込みしてもすぐ受付画面を開く */
+  try {
+    var savedPin = sessionStorage.getItem(PIN_STORAGE_KEY) || "";
+    if (savedPin) {
+      F.$("#pin").value = savedPin;
+      openDesk_(savedPin);
+    }
+  } catch (e) { }
+
+  F.$("#lock-btn").addEventListener("click", function () {
+    F.$("#pin").value = "";
+    backToPinScreen_("");
+  });
+
   function tryPin() {
+    unlockAudio_();
     var v = F.$("#pin").value.trim();
     if (!v) { box(F.$("#pin-msg"), "err", "合言葉を入れてください。"); return; }
-    function open_() {
-      PIN = v;
-      F.$("#pin-area").hidden = true;
-      F.$("#desk-area").hidden = false;
-    }
     if (F.isDemo()) {
-      if (v !== String(F.CFG.checkinPin)) { box(F.$("#pin-msg"), "err", F.friendlyError("pin")); return; }
-      open_(); return;
+      if (v !== String(F.CFG.checkinPin)) { playFeedback("err"); box(F.$("#pin-msg"), "err", F.friendlyError("pin")); return; }
+      playFeedback("ok");
+      openDesk_(v);
+      return;
     }
-    /* 本番は受付係（GAS）に聞く。合言葉はサイトには置かない */
+    /* 本番は受付係（GAS）に POST で聞く（URLにPINを残さない・v1.3.2/v1.3.3 両対応） */
     box(F.$("#pin-msg"), "info", "確認しています…");
-    F.getGas({ action: "lookup", no: "KF-0000", pin: v }).then(function (j) {
-      if (j && j.error === "pin") { box(F.$("#pin-msg"), "err", F.friendlyError("pin")); return; }
-      if (j && j.error === "locked") { box(F.$("#pin-msg"), "err", F.friendlyError("locked")); return; }
-      if (j && j.error === "setup") { box(F.$("#pin-msg"), "err", "受付係の合言葉の設定が終わっていません（未設定か8文字より短い）。なつきさんに連絡してください。"); return; }
+    F.postGas({ action: "search", name: "__pin_check__", birth: "20000101", pin: v }).then(function (j) {
+      if (j && j.error === "pin") { playFeedback("err"); box(F.$("#pin-msg"), "err", F.friendlyError("pin")); return; }
+      if (j && j.error === "locked") { playFeedback("err"); box(F.$("#pin-msg"), "err", F.friendlyError("locked")); return; }
+      if (j && j.error === "setup") { playFeedback("err"); box(F.$("#pin-msg"), "err", "受付係の合言葉の設定が終わっていません（未設定か8文字より短い）。なつきさんに連絡してください。"); return; }
       F.$("#pin-msg").innerHTML = "";
-      open_();
-    }).catch(function () { box(F.$("#pin-msg"), "err", F.friendlyError("network")); });
+      playFeedback("ok");
+      openDesk_(v);
+    }).catch(function () { playFeedback("err"); box(F.$("#pin-msg"), "err", F.friendlyError("network")); });
   }
   document.addEventListener("click", function (e) {
     var bt = e.target.closest ? e.target.closest("[data-part]") : null;
     if (!bt) return;
+    if (!boothModeChk || !boothModeChk.checked) return;
     var bid = bt.getAttribute("data-part"), rno = bt.getAttribute("data-no");
     bt.disabled = true; bt.textContent = "送っています…";
     if (F.isDemo()) { bt.outerHTML = '<span class="badge-big badge-done" style="font-size:15px;padding:2px 10px;">参加済み（テスト）</span>'; return; }
     F.postGas({ action: "participate", no: rno, booth: bid, pin: PIN }).then(function (j) {
-      if (j && j.ok) { bt.outerHTML = '<span class="badge-big badge-done" style="font-size:15px;padding:2px 10px;">参加済み</span>'; }
-      else { bt.disabled = false; bt.textContent = "体験おわり"; box(F.$("#desk-msg"), "err", F.friendlyError(j && j.error)); }
-    }).catch(function () { bt.disabled = false; bt.textContent = "体験おわり"; box(F.$("#desk-msg"), "err", F.friendlyError("network")); });
+      if (handleAuthError_(j)) return;
+      if (j && j.ok) { playFeedback("ok"); bt.outerHTML = '<span class="badge-big badge-done" style="font-size:15px;padding:2px 10px;">参加済み</span>'; }
+      else { playFeedback("err"); bt.disabled = false; bt.textContent = "体験おわり"; box(F.$("#desk-msg"), "err", F.friendlyError(j && j.error)); }
+    }).catch(function () { playFeedback("err"); bt.disabled = false; bt.textContent = "体験おわり"; box(F.$("#desk-msg"), "err", F.friendlyError("network")); });
   });
   F.$("#pin-btn").addEventListener("click", tryPin);
   F.$("#pin").addEventListener("keydown", function (e) { if (e.key === "Enter") tryPin(); });
@@ -178,6 +327,7 @@
   }
 
   function startScan() {
+    unlockAudio_();
     if (typeof jsQR !== "function") {
       box(F.$("#desk-msg"), "err", "QRの読み取り部品が読み込めませんでした。番号の手入力をお使いください。");
       return;
@@ -222,6 +372,7 @@
 
   /* 写真でQRを読む（カメラが起動しないときの逃げ道。アプリ内ブラウザでも動く） */
   F.$("#photo-qr").addEventListener("change", function () {
+    unlockAudio_();
     var f = this.files && this.files[0]; if (!f) return;
     var img = new Image();
     var url = URL.createObjectURL(f);
@@ -237,10 +388,10 @@
       }
       URL.revokeObjectURL(url);
       var no = code && code.data ? pickNo(code.data) : "";
-      if (no) { F.$("#no").value = no; lookup(no, F.$("#auto-checkin").checked); }
-      else box(F.$("#desk-msg"), "err", "QRが読み取れませんでした。QRを大きく、明るく写してもう一度お試しください。");
+      if (no) { playFeedback("scan"); F.$("#no").value = no; lookup(no, F.$("#auto-checkin").checked); }
+      else { playFeedback("err"); box(F.$("#desk-msg"), "err", "QRが読み取れませんでした。QRを大きく、明るく写してもう一度お試しください。"); }
     };
-    img.onerror = function () { URL.revokeObjectURL(url); box(F.$("#desk-msg"), "err", "この写真の形式は読めませんでした。番号の手入力をお使いください。"); };
+    img.onerror = function () { URL.revokeObjectURL(url); playFeedback("err"); box(F.$("#desk-msg"), "err", "この写真の形式は読めませんでした。番号の手入力をお使いください。"); };
     img.src = url;
     this.value = "";
   });
@@ -258,6 +409,7 @@
         var no = pickNo(code.data);
         if (no) {
           stopScan();
+          playFeedback("scan");
           F.$("#no").value = no;
           lookup(no, F.$("#auto-checkin").checked);
           return;
@@ -277,7 +429,7 @@
   F.$("#scan-btn").addEventListener("click", startScan);
   F.$("#scan-stop").addEventListener("click", stopScan);
 
-  /* ---------- 照会 ---------- */
+  /* ---------- 照会＆1回通信チェックイン ---------- */
   function normalizeNo(v) {
     var s = String(v).trim().toUpperCase().replace(/\s/g, "");
     var m = s.match(/^(?:KF-?)?(\d+)$/);
@@ -287,10 +439,19 @@
     return "KF-" + n;
   }
 
-  function lookup(raw, autoCheckin) {
-    var no = normalizeNo(raw);
+  /* POST lookup（v1.3.3）を優先し、v1.3.2（error==="action"）なら自動で GET lookup にフォールバック */
+  function fetchLookup_(no) {
+    return F.postGas({ action: "lookup", no: no, pin: PIN }).then(function (j) {
+      if (j && j.error === "action") return F.getGas({ action: "lookup", no: no, pin: PIN });
+      return j;
+    });
+  }
+
+  function lookup(rawNo, fromQr) {
+    var no = normalizeNo(rawNo);
     if (!no) { box(F.$("#desk-msg"), "err", "番号を入れてください。"); return; }
-    F.$("#desk-msg").innerHTML = '<p class="muted">調べています…</p>';
+    var useAutoCheckin = !!fromQr && F.$("#auto-checkin").checked;
+    F.$("#desk-msg").innerHTML = '<p class="muted">' + (useAutoCheckin ? "来場受付をしています…" : "調べています…") + "</p>";
     F.$("#result-card").hidden = true;
 
     if (F.isDemo()) {
@@ -299,37 +460,120 @@
       var demoVisit = (no === "KF-0002"), demoCanceled = (no === "KF-0003");
       window.setTimeout(function () {
         F.$("#desk-msg").innerHTML = "";
+        if (useAutoCheckin) {
+          if (demoCanceled) {
+            playFeedback("err");
+            box(F.$("#desk-msg"), "err", F.friendlyError("canceled"));
+            showPerson({
+              no: no, name: "（テスト表示）お名前", kana: "", adults: 2, children: 1,
+              booths: [], visitOnly: true, checkedIn: false, canceled: true
+            });
+            return;
+          }
+          var wasAlready = !!demoCame[no];
+          if (!wasAlready) demoCame[no] = "10:15";
+          if (wasAlready) {
+            playFeedback("already");
+            box(F.$("#desk-msg"), "info", "⚠️ すでに来場受付が済んでいます（受付時刻: " + demoCame[no] + "）※2回目の読み取りです");
+          } else {
+            playFeedback("ok");
+            box(F.$("#desk-msg"), "ok", "✅ 来場受付が完了しました（テスト）");
+          }
+          showPerson({
+            no: no, name: "（テスト表示）お名前", kana: "", adults: 2, children: 1,
+            booths: demoVisit ? [] : [{ id: "haihai", name: "ハイハイレース", time: "10:50〜11:20" }],
+            visitOnly: demoVisit,
+            checkedIn: true,
+            checkedInAt: demoCame[no],
+            already: wasAlready,
+            justCheckedIn: !wasAlready,
+            canceled: false
+          });
+          return;
+        }
+        if (demoCanceled) playFeedback("err");
+        else if (demoCame[no]) playFeedback("already");
         showPerson({
           no: no, name: "（テスト表示）お名前", kana: "", adults: 2, children: 1,
           booths: demoVisit ? [] : [{ id: "haihai", name: "ハイハイレース", time: "10:50〜11:20" }],
           visitOnly: demoVisit,
-          checkedIn: false,
+          checkedIn: !!demoCame[no],
+          checkedInAt: demoCame[no] || "",
+          already: !!demoCame[no],
           canceled: demoCanceled
         });
-      }, 300);
+      }, 200);
       return;
     }
 
-    F.getGas({ action: "lookup", no: no, pin: PIN }).then(function (j) {
+    /* ① 自動チェックインON時：GET lookup を送らず、直接 POST checkin を1回だけ送信（速度2倍＆負荷半減） */
+    if (useAutoCheckin) {
+      F.postGas({ action: "checkin", no: no, pin: PIN }).then(function (j) {
+        if (handleAuthError_(j)) return;
+        F.$("#desk-msg").innerHTML = "";
+        if (j && j.ok === true) {
+          if (j.already) {
+            playFeedback("already");
+            var atTxt = j.checkedInAt ? "（受付時刻: " + j.checkedInAt + "）" : "";
+            box(F.$("#desk-msg"), "info", "⚠️ すでに来場受付が済んでいます" + atTxt + " ※2回目の読み取りです");
+            j.justCheckedIn = false;
+          } else {
+            playFeedback("ok");
+            box(F.$("#desk-msg"), "ok", "✅ 来場受付が完了しました");
+            j.justCheckedIn = true;
+          }
+          showPerson(j);
+        } else if (j && j.error === "canceled") {
+          playFeedback("err");
+          box(F.$("#desk-msg"), "err", F.friendlyError("canceled"));
+          if (Array.isArray(j.booths)) {
+            j.canceled = true;
+            showPerson(j);
+          } else {
+            /* 現行 v1.3.2 互換：booths が含まれていない場合は lookup で詳細を取得して赤バッジ表示 */
+            fetchLookup_(no).then(function (lk) {
+              if (lk && lk.ok) { lk.canceled = true; showPerson(lk); }
+              else showPerson({ no: no, name: j.name || "", canceled: true, booths: [] });
+            }).catch(function () {
+              showPerson({ no: no, name: j.name || "", canceled: true, booths: [] });
+            });
+          }
+        } else {
+          playFeedback("err");
+          box(F.$("#desk-msg"), "err", F.friendlyError(j && j.error));
+        }
+      }).catch(function () {
+        playFeedback("err");
+        box(F.$("#desk-msg"), "err", F.friendlyError("network"));
+      });
+      return;
+    }
+
+    /* 自動チェックインOFF時・番号手入力・名前検索からの照会 */
+    fetchLookup_(no).then(function (j) {
+      if (handleAuthError_(j)) return;
       F.$("#desk-msg").innerHTML = "";
       if (j && j.ok === true) {
-        showPerson(j);
-        /* QRを読んだときは、そのまま「来場」にする（すでに来場ずみ・取消済みなら何もしない） */
-        if (autoCheckin && !j.checkedIn && !j.canceled) {
-          var b1 = F.$("#r-actions button");
-          if (b1) { b1.click(); box(F.$("#desk-msg"), "ok", "QRを読み取りました。来場にします。"); }
-        } else if (autoCheckin && j.checkedIn) {
-          box(F.$("#desk-msg"), "info", "この方はすでに来場ずみです。");
+        if (j.canceled) {
+          playFeedback("err");
+          box(F.$("#desk-msg"), "err", F.friendlyError("canceled"));
+        } else if (j.checkedIn) {
+          playFeedback("already");
+          j.already = true;
         }
+        showPerson(j);
+      } else {
+        playFeedback("err");
+        box(F.$("#desk-msg"), "err", F.friendlyError(j && j.error));
       }
-      else box(F.$("#desk-msg"), "err", F.friendlyError(j && j.error));
     }).catch(function () {
+      playFeedback("err");
       box(F.$("#desk-msg"), "err", F.friendlyError("network"));
     });
   }
 
-  F.$("#lookup-btn").addEventListener("click", function () { lookup(F.$("#no").value); });
-  F.$("#no").addEventListener("keydown", function (e) { if (e.key === "Enter") lookup(F.$("#no").value); });
+  F.$("#lookup-btn").addEventListener("click", function () { unlockAudio_(); lookup(F.$("#no").value, false); });
+  F.$("#no").addEventListener("keydown", function (e) { if (e.key === "Enter") { unlockAudio_(); lookup(F.$("#no").value, false); } });
 
   /* ---------- 名前と生年月日で探す（2026-11-11） ----------
      受付係（GAS）の action search に、お名前と生年月日を送る（POST＝URLに名前を残さない）。
@@ -407,6 +651,7 @@
   });
 
   function doSearch() {
+    unlockAudio_();
     var rawName = F.$("#s-name").value, rawBirth = F.$("#s-birth").value;
     var name = rawName.replace(/[\s　]/g, ""), b8 = birth8(rawBirth);
     if (!name || !rawBirth.trim()) { box(sList, "err", "お名前と生年月日の両方を入れてください。"); return; }
@@ -420,6 +665,7 @@
     sbtn.disabled = true;
     F.postGas({ action: "search", name: rawName.trim(), birth: rawBirth.trim(), pin: PIN }).then(function (j) {
       sbtn.disabled = false;
+      if (handleAuthError_(j)) return;
       if (j && j.ok === true) showCandidates(j.candidates || [], !!j.more);
       else if (j && j.error === "invalid") box(sList, "err", j.message || "お名前と生年月日を確かめてください。");
       else box(sList, "err", F.friendlyError(j && j.error));
@@ -431,6 +677,20 @@
   F.$("#search-btn").addEventListener("click", doSearch);
   F.$("#s-birth").addEventListener("keydown", function (e) { if (e.key === "Enter") doSearch(); });
 
+  function setCardBanner_(kind, text) {
+    var bnr = F.$("#r-banner");
+    if (!bnr) return;
+    if (!kind || !text) {
+      bnr.hidden = true;
+      bnr.className = "r-banner";
+      bnr.textContent = "";
+      return;
+    }
+    bnr.hidden = false;
+    bnr.className = "r-banner r-banner-" + kind;
+    bnr.textContent = text;
+  }
+
   function showPerson(p) {
     F.$("#result-card").hidden = false;
     F.$("#r-no").textContent = p.no;
@@ -440,21 +700,35 @@
 
     var badge = F.$("#r-badge");
     if (p.canceled) {
-      /* 取り消された予約（2026-11-11）。この番号では来場にできないので、予約なしの来場登録へ */
-      badge.className = "badge-big badge-yet";
-      badge.textContent = "取消済み（この番号では来場にできません）";
+      /* 取り消された予約。赤バッジで大きく表示し、カード上部にも警告を出す */
+      badge.className = "badge-big badge-cancel";
+      badge.textContent = "取消済み（受付不可）";
+      setCardBanner_("cancel", "❌ このご予約はキャンセル（取消）されています（この番号では受付できません）");
+    } else if (p.already) {
+      /* すでに来場受付済み（2回目以降の読み取り・別スタッフとの同時読み取り） */
+      var atLabel = p.checkedInAt ? "（受付時刻: " + p.checkedInAt + "）" : "";
+      badge.className = "badge-big badge-already";
+      badge.textContent = "⚠️ すでに来場受付が済んでいます" + atLabel;
+      setCardBanner_("already", "⚠️ すでに来場受付が済んでいます" + atLabel + " ※2回目の読み取りです");
     } else if (p.checkedIn) {
       badge.className = "badge-big badge-done";
       badge.textContent = "来場ずみ" + (p.checkedInAt ? "（" + p.checkedInAt + "）" : "");
+      if (p.justCheckedIn) {
+        setCardBanner_("ok", "✅ 来場受付が完了しました" + (p.checkedInAt ? "（" + p.checkedInAt + "）" : ""));
+      } else {
+        setCardBanner_("", "");
+      }
     } else {
       badge.className = "badge-big badge-yet";
       badge.textContent = "まだ来場していません";
+      setCardBanner_("", "");
     }
 
     var bs = p.booths || [];
     /* 来場のみの登録（体験の予約なし）＝受付係が visitOnly／種別 visit を返します */
     var visitOnly = (p.visitOnly === true) || (String(p.type || "") === "visit");
     var visitLine = '<div class="booth-line"><b>来場のみ</b>　空いているブースへご案内してください</div>';
+    var showPartBtn = !!(boothModeChk && boothModeChk.checked);
     F.$("#r-booths").innerHTML = (visitOnly ? visitLine : "") + (bs.length
       ? bs.map(function (b) {
           var full = F.booth(b.id);
@@ -464,7 +738,7 @@
             (b.people > 1 ? "　" + esc(String(b.people)) + "名" : "") +
             (time ? '　<span class="small">' + esc(time) + "</span>" : "") +
             (done ? '　<span class="badge-big badge-done" style="font-size:15px;padding:2px 10px;">参加済み</span>'
-                  : '　<button type="button" class="btn btn-line" style="display:inline-flex;width:auto;min-height:40px;padding:6px 12px;font-size:15px;margin:0;" data-part="' + esc(b.id) + '" data-no="' + esc(p.no) + '">体験おわり</button>') +
+                  : '　<button type="button" class="btn btn-line booth-part-btn"' + (showPartBtn ? "" : " hidden") + ' style="display:inline-flex;width:auto;min-height:40px;padding:6px 12px;font-size:15px;margin:0;" data-part="' + esc(b.id) + '" data-no="' + esc(p.no) + '">体験おわり</button>') +
             /* 受付での声かけ（booths.json の deskNote。2026-11-10 追加） */
             (!done && full && full.deskNote
               ? '<div style="margin:6px 0 2px;padding:8px 12px;background:#FFF4D6;border-left:5px solid #E8A33D;border-radius:6px;font-size:16px;font-weight:700;line-height:1.5;color:#3A2A00;">📣 ' + esc(full.deskNote) + "</div>"
@@ -472,6 +746,8 @@
             "</div>";
         }).join("")
       : (visitOnly ? "" : '<div class="booth-line">予約ブースなし</div>'));
+    F.$("#r-booth-mode-wrap").hidden = (bs.length === 0);
+    syncBoothStaffMode_();
 
     /* 来場のみの方が、その場で空いているブースに入ったときの記録 */
     var spot = F.$("#r-spot");
@@ -602,11 +878,13 @@
     var b = F.booth(sel.value) || { name: opt.getAttribute("data-name") || sel.value, time: opt.getAttribute("data-time") || "" };
     btn.disabled = true; btn.textContent = "記録しています…";
     var finish = function (ok, msg) {
+      if (F.$("#r-no").textContent !== no) return;
       btn.disabled = false; btn.textContent = "このブースに入った";
       box(F.$("#desk-msg"), ok ? "ok" : "err", msg);
     };
     if (F.isDemo()) {
       window.setTimeout(function () {
+        if (F.$("#r-no").textContent !== no) return;
         F.$("#r-booths").insertAdjacentHTML("beforeend", '<div class="booth-line">' + esc(b ? b.name : sel.value) + '　<span class="badge-big badge-done" style="font-size:15px;padding:2px 10px;">参加済み（テスト）</span></div>');
         finish(true, "記録しました（テスト）。");
       }, 300);
@@ -614,38 +892,83 @@
     }
     F.postGas({ action: "participate", no: no, booth: sel.value, add: true, pin: PIN, boothName: b ? b.name : "", boothTime: b ? b.time : "" })
       .then(function (j) {
+        if (handleAuthError_(j)) return;
+        if (F.$("#r-no").textContent !== no) return;
         if (j && j.ok) {
+          playFeedback("ok");
           F.$("#r-booths").insertAdjacentHTML("beforeend", '<div class="booth-line">' + esc(b ? b.name : sel.value) + '　<span class="badge-big badge-done" style="font-size:15px;padding:2px 10px;">参加済み</span></div>');
           finish(true, "「" + (b ? b.name : sel.value) + "」に入ったことを記録しました。");
         } else if (j && j.error === "full") {
+          playFeedback("err");
           finish(false, (j.message || "その枠は、もう埋まっています") + "。画面を開きなおすと、いま空いている枠が出ます。");
-        } else finish(false, F.friendlyError(j && j.error));
+        } else {
+          playFeedback("err");
+          finish(false, F.friendlyError(j && j.error));
+        }
       })
-      .catch(function () { finish(false, F.friendlyError("network")); });
+      .catch(function () { playFeedback("err"); finish(false, F.friendlyError("network")); });
   }
 
   function doCheckin(no, btn) {
+    unlockAudio_();
     btn.disabled = true;
     btn.textContent = "記録しています…";
 
-    var finish = function (ok) {
+    var finish = function (ok, already, checkedInAt) {
+      if (F.$("#r-no").textContent !== no) return;
       if (ok) {
-        btn.textContent = "来場にしました";
         var badge = F.$("#r-badge");
-        badge.className = "badge-big badge-done";
-        badge.textContent = "来場ずみ";
+        var atTxt = checkedInAt ? "（受付時刻: " + checkedInAt + "）" : "";
+        if (already) {
+          playFeedback("already");
+          btn.textContent = "来場ずみ（既受付）";
+          badge.className = "badge-big badge-already";
+          badge.textContent = "⚠️ すでに来場受付が済んでいます" + atTxt;
+          setCardBanner_("already", "⚠️ すでに来場受付が済んでいます" + atTxt + " ※2回目の読み取りです");
+          box(F.$("#desk-msg"), "info", "⚠️ すでに来場受付が済んでいます" + atTxt + " ※2回目の読み取りです");
+        } else {
+          playFeedback("ok");
+          btn.textContent = "来場にしました";
+          badge.className = "badge-big badge-done";
+          badge.textContent = "来場ずみ" + (checkedInAt ? "（" + checkedInAt + "）" : "");
+          setCardBanner_("ok", "✅ 来場受付が完了しました" + (checkedInAt ? "（" + checkedInAt + "）" : ""));
+          box(F.$("#desk-msg"), "ok", "✅ 来場受付が完了しました");
+        }
       } else {
         btn.disabled = false;
         btn.textContent = "来場にする";
       }
     };
 
-    if (F.isDemo()) { window.setTimeout(function () { finish(true); }, 300); return; }
+    if (F.isDemo()) {
+      window.setTimeout(function () {
+        if (F.$("#r-no").textContent !== no) return;
+        var wasAlready = !!demoCame[no];
+        if (!wasAlready) demoCame[no] = "10:15";
+        finish(true, wasAlready, demoCame[no]);
+      }, 300);
+      return;
+    }
 
     F.postGas({ action: "checkin", no: no, pin: PIN }).then(function (j) {
-      if (j && j.ok === true) finish(true);
-      else { box(F.$("#desk-msg"), "err", F.friendlyError(j && j.error)); finish(false); }
+      if (handleAuthError_(j)) return;
+      if (F.$("#r-no").textContent !== no) return;
+      if (j && j.ok === true) {
+        finish(true, !!j.already, j.checkedInAt || "");
+      } else {
+        playFeedback("err");
+        if (j && j.error === "canceled") {
+          var badge = F.$("#r-badge");
+          badge.className = "badge-big badge-cancel";
+          badge.textContent = "取消済み（受付不可）";
+          setCardBanner_("cancel", "❌ このご予約はキャンセル（取消）されています（この番号では受付できません）");
+        }
+        box(F.$("#desk-msg"), "err", F.friendlyError(j && j.error));
+        finish(false);
+      }
     }).catch(function () {
+      if (F.$("#r-no").textContent !== no) return;
+      playFeedback("err");
       box(F.$("#desk-msg"), "err", F.friendlyError("network"));
       finish(false);
     });
@@ -653,6 +976,7 @@
 
   function nextPerson() {
     F.$("#result-card").hidden = true;
+    setCardBanner_("", "");
     F.$("#no").value = "";
     F.$("#desk-msg").innerHTML = "";
     startScan();
@@ -675,6 +999,7 @@
   wPeople.addEventListener("click", function (e) { var d = e.target.closest ? e.target.closest(".w-del") : null; if (d) d.closest("[data-wperson]").remove(); });
   function wReset() { wPeople.innerHTML = ""; wAdd(); F.$("#w-address").value = ""; F.$("#w-phone").value = ""; }
   wbtn.addEventListener("click", function () {
+    unlockAudio_();
     var people = F.$$("[data-wperson]").map(function (r) {
       return { name: r.querySelector(".w-name").value.trim(), birth: r.querySelector(".w-birth").value.trim(), kind: r.querySelector(".w-kind").value, join: true };
     }).filter(function (pp) { return pp.name; });
@@ -684,16 +1009,19 @@
     var payload = { action: "walkin", pin: PIN, name: people[0].name, birth: people[0].birth, people: people,
       address: F.$("#w-address").value.trim(), phone: F.$("#w-phone").value.trim(), adults: adults, children: children };
     if (F.isDemo()) {
+      playFeedback("ok");
       box(F.$("#walkin-msg"), "ok", "登録しました（テスト）。" + people.length + "名。番号は KF-0101 です。");
       wReset(); return;
     }
     wbtn.disabled = true; wbtn.textContent = "送っています…";
     F.postGas(payload).then(function (j) {
       wbtn.disabled = false; wbtn.textContent = "来場を登録する";
-      if (j && j.ok) { box(F.$("#walkin-msg"), "ok", "登録しました。" + people.length + "名。番号は " + j.no + " です。バンドをお渡しください。"); wReset(); }
-      else { box(F.$("#walkin-msg"), "err", F.friendlyError(j && j.error)); }
+      if (handleAuthError_(j)) return;
+      if (j && j.ok) { playFeedback("ok"); box(F.$("#walkin-msg"), "ok", "登録しました。" + people.length + "名。番号は " + j.no + " です。バンドをお渡しください。"); wReset(); }
+      else { playFeedback("err"); box(F.$("#walkin-msg"), "err", F.friendlyError(j && j.error)); }
     }).catch(function () {
       wbtn.disabled = false; wbtn.textContent = "来場を登録する";
+      playFeedback("err");
       box(F.$("#walkin-msg"), "err", F.friendlyError("network"));
     });
   });

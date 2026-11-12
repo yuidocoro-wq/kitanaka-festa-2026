@@ -503,6 +503,20 @@ input:focus, select:focus, textarea:focus{
 }
 .badge-yet{ background:#FFDD72; color:#23211B; }
 .badge-done{ background:var(--green); color:#fff; }
+.badge-already{ background:#E8A33D; color:#23211B; border:2px solid #FFF4D6; }
+.badge-cancel{ background:var(--red); color:#fff; }
+.r-banner{
+  border-radius:12px;
+  padding:12px 14px;
+  margin:0 0 12px;
+  font-size:18px;
+  font-weight:700;
+  line-height:1.5;
+}
+.r-banner-ok{ background:#1E5238; border:2px solid #58C288; color:#E8FFF1; }
+.r-banner-already{ background:#173D5C; border:3px solid #FFDD72; color:#FFF8E0; }
+.r-banner-cancel{ background:#631712; border:3px solid #FF8A80; color:#FFECEB; }
+#result-card:not(.is-booth-staff) .booth-part-btn{ display:none !important; }
 .booth-line{
   font-size:20px;
   padding:10px 0;

@@ -80,12 +80,37 @@
 
   /* ---------------- 受付係（GAS）とのやりとり ---------------- */
 
+  var FETCH_TIMEOUT_MS = 25000;
+
+  function fetchJson_(url, opts) {
+    var ctrl = (typeof AbortController === "function") ? new AbortController() : null;
+    var timer = null;
+    var options = {};
+    if (opts) {
+      for (var k in opts) {
+        if (Object.prototype.hasOwnProperty.call(opts, k)) options[k] = opts[k];
+      }
+    }
+    if (ctrl) {
+      options.signal = ctrl.signal;
+      timer = global.setTimeout(function () {
+        try { ctrl.abort(); } catch (e) { }
+      }, FETCH_TIMEOUT_MS);
+    }
+    return fetch(url, options).then(function (r) {
+      if (timer) global.clearTimeout(timer);
+      return r.json();
+    }, function (err) {
+      if (timer) global.clearTimeout(timer);
+      throw err;
+    });
+  }
+
   /* 残り枠を取る： GET ?action=status */
   function fetchStatus() {
     if (isDemo()) return Promise.reject(new Error("demo"));
     var url = CFG.gasUrl + (CFG.gasUrl.indexOf("?") >= 0 ? "&" : "?") + "action=status";
-    return fetch(url, { method: "GET", redirect: "follow" })
-      .then(function (r) { return r.json(); })
+    return fetchJson_(url, { method: "GET", redirect: "follow" })
       .then(function (j) {
         if (!j || j.ok !== true || !j.booths) throw new Error("bad");
         var map = {};
@@ -96,12 +121,12 @@
 
   /* POST は必ず text/plain（CORSのプリフライトを避けるため） */
   function postGas(payload) {
-    return fetch(CFG.gasUrl, {
+    return fetchJson_(CFG.gasUrl, {
       method: "POST",
       headers: { "Content-Type": "text/plain" },
       redirect: "follow",
       body: JSON.stringify(payload)
-    }).then(function (r) { return r.json(); });
+    });
   }
 
   /* GET（照会など） */
@@ -113,7 +138,7 @@
       }
     }
     var url = CFG.gasUrl + (CFG.gasUrl.indexOf("?") >= 0 ? "&" : "?") + parts.join("&");
-    return fetch(url, { method: "GET", redirect: "follow" }).then(function (r) { return r.json(); });
+    return fetchJson_(url, { method: "GET", redirect: "follow" });
   }
 
   /* ---------------- エラーメッセージ（やさしい日本語に） ---------------- */
@@ -147,6 +172,10 @@
           (DATA.event.contact || "") + "）でお問い合わせください。";
       case "notfound":
         return "その予約番号は見つかりませんでした。番号をお確かめください。";
+      case "busy":
+        return "ただいま他のスタッフの受付や予約と重なっています。3秒ほど待ってから、もう一度押してください。";
+      case "canceled":
+        return "このご予約はキャンセル（取消）されています。";
       case "network":
         return "通信がうまくいきませんでした。電波のよいところで、もう一度お試しください。何度も失敗するときは、お電話（" +
           (DATA.event.contact || "") + "）でご予約もうけたまわります。";
