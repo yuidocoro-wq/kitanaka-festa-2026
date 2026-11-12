@@ -529,6 +529,11 @@
        予約で埋まっていても空いている時間に入れる。同じ名前の枠は1行にまとめ、15:00まで出す。
      ・時刻で消すのは開催日（booths.json の event.date）だけ。前日までのリハーサルでは全部出る。
      stat … fetchStatus() の結果（読めなかったときは null → 残りの数なしで全部出す） */
+  /* 足もみ・ゆいまーるの当日枠（GAS の DAY_SLOTS と同じ中身にする） */
+  var DAY_SLOTS = {
+    ashimomi: { mins: 10, times: ["10:30", "11:30", "12:30", "13:30", "14:30"] },
+    seitai_yuimaru: { mins: 20, times: ["10:30", "11:30", "12:30", "13:30", "14:30"] }
+  };
   function spotOptions(stat) {
     var now = new Date(Date.now() + 9 * 3600 * 1000);   /* 日本時間 */
     var today = now.getUTCFullYear() + "-" + ("0" + (now.getUTCMonth() + 1)).slice(-2) + "-" + ("0" + now.getUTCDate()).slice(-2);
@@ -548,6 +553,28 @@
         var key = par ? par.id : b.id;
         if (seen[key]) return;
         seen[key] = true;
+        /* 足もみ・ゆいまーる：空いている枠だけを時間ごとに出す（予約枠の空き＋当日枠 10:30〜14:30）（2026-11-12） */
+        var dc = DAY_SLOTS[key];
+        if (dc && stat && stat[key + "_" + dc.times[0].replace(":", "")]) {
+          var cand = [];
+          (par.slots || []).forEach(function (sid) {
+            var sb = F.booth(sid); if (!sb) return;
+            cand.push({ id: sid, start: toMin(sb.start || sb.time), name: par.name + " " + (sb.start || "") + "の枠", time: sb.time || "" });
+          });
+          dc.times.forEach(function (t) {
+            var st0 = toMin(t);
+            var en = st0 + dc.mins, end = ("0" + Math.floor(en / 60)).slice(-2) + ":" + ("0" + (en % 60)).slice(-2);
+            cand.push({ id: key + "_" + t.replace(":", ""), start: st0, name: par.name + " " + t + "の当日枠", time: t + "〜" + end });
+          });
+          cand.sort(function (a, c) { return a.start - c.start; });
+          cand.forEach(function (c) {
+            if (isDay && c.start !== null && nowMin >= c.start + dc.mins) return;   // もう終わった枠
+            var s0 = stat[c.id];
+            if (!s0 || Number(s0.capacity || 0) - Number(s0.reserved || 0) <= 0) return;   // 埋まっている枠
+            care.push({ id: c.id, name: c.name, time: c.time, label: c.name + "　" + c.time + "（空き）" });
+          });
+          return;
+        }
         var nm = par ? par.name : String(b.name || "").replace(/\s*\d{1,2}:\d{2}の枠$/, "");
         care.push({ id: key, name: nm, time: "", label: nm + "（空いている時間に）" });
         return;
@@ -590,6 +617,8 @@
         if (j && j.ok) {
           F.$("#r-booths").insertAdjacentHTML("beforeend", '<div class="booth-line">' + esc(b ? b.name : sel.value) + '　<span class="badge-big badge-done" style="font-size:15px;padding:2px 10px;">参加済み</span></div>');
           finish(true, "「" + (b ? b.name : sel.value) + "」に入ったことを記録しました。");
+        } else if (j && j.error === "full") {
+          finish(false, (j.message || "その枠は、もう埋まっています") + "。画面を開きなおすと、いま空いている枠が出ます。");
         } else finish(false, F.friendlyError(j && j.error));
       })
       .catch(function () { finish(false, F.friendlyError("network")); });
