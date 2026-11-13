@@ -156,6 +156,15 @@
         </ol>
       </div>
 
+      <!-- まだ体験が入っていない方への案内（2026-11-13 試作）。名前・生年月日はこの端末の中だけで使う（annai.js） -->
+      <div class="card annai no-print" id="annai" hidden>
+        <h3><span>まだ体験が入っていない</span><span>方がいます</span></h3>
+        <p class="small" id="annai-lead" style="margin:0 0 10px;">体験は、1回の申し込みで1つです。年齢のちがうごきょうだいは、つづけてもう1回お申し込みください。</p>
+        <div id="annai-list"></div>
+        <a class="btn btn-quiet" id="annai-all" href="index.html#booths">空いている体験の一覧へ</a>
+        <p class="small" style="margin:0;">見ているだけの方は、このままで大丈夫です。当日、空いている体験にその場で入ることもできます。</p>
+      </div>
+
       <div class="card no-print">
         <a class="btn btn-sub" id="t-map" href="#" target="_blank" rel="noopener">会場の地図を開く</a>
         <a class="btn btn-quiet" id="t-more" href="index.html#booths">ほかの体験も予約する</a>
@@ -180,6 +189,7 @@
 <script src="booths.js?v=20261110b"></script>
 <script src="app.js?v=20261113a"></script>
 <script src="qr.js?v=20261111a"></script>
+<script src="annai.js?v=20261113a"></script>
 <script>
 (function () {
   "use strict";
@@ -307,9 +317,20 @@
         var group = !F.isCareBooth(b.id) && !F.isRace(b);
         if (group) anyGroup = true;
         var on = (b.id in prev) ? prev[b.id] : (idx === 0 || group);
+        /* 完了画面の案内「つづけて予約する」から来たときは、案内した方にだけチェック（2026-11-13 試作） */
+        if (!(b.id in prev) && sugg && sugg.booth === b.id) on = sugg.idx.indexOf(idx) >= 0;
         return '<label class="check" style="margin-bottom:6px;padding:8px 10px;"><input type="checkbox" class="p-b" value="' + esc(b.id) + '"' + (on ? " checked" : "") + '><span class="t"><b style="font-size:16px;">' + esc(boothLabel(b)) + "</b></span></label>";
       }).join("") + (anyGroup && idx > 0 ? '<p class="small" style="margin:2px 0 0;">見学だけの方は、チェックを外してください。</p>' : "");
     });
+  }
+  /* 完了画面の案内から来たときの「だれにチェックを入れるか」（この端末の sessionStorage・行の番号と体験の id だけ。名前は入れない） */
+  var SUGG_KEY = "kitanaka_festa_suggest", sugg = null;
+  if (!onsiteMode) {
+    try {
+      sugg = JSON.parse(sessionStorage.getItem(SUGG_KEY) || "null");
+      sessionStorage.removeItem(SUGG_KEY);
+      if (!sugg || typeof sugg.booth !== "string" || !Array.isArray(sugg.idx)) sugg = null;
+    } catch (e) { sugg = null; }
   }
   addPerson();
   F.$("#add-person").addEventListener("click", addPerson);
@@ -355,7 +376,7 @@
   function loadForm() {
     if (onsiteMode) return;   /* 当日モードは前回の入力を出さない */
     var v = null; try { v = JSON.parse(localStorage.getItem(SAVE_KEY) || "null"); } catch (e) { v = null; }
-    if (!v || !v.people || !v.people.length || !hasSavedContent(v)) return;
+    if (!v || !v.people || !v.people.length || !hasSavedContent(v)) { sugg = null; return; }
     peopleEl.innerHTML = "";
     v.people.forEach(function (pp, i) {
       peopleEl.insertAdjacentHTML("beforeend", personRow(i));
@@ -373,6 +394,7 @@
     F.$("#clear-saved").addEventListener("click", function () {
       clearingSaved = true;
       try { localStorage.removeItem(SAVE_KEY); } catch (e) { }
+      try { if (window.FestaAnnai) sessionStorage.removeItem(window.FestaAnnai.BOOKED_KEY); } catch (e) { }
       location.reload();
     });
   }
@@ -514,6 +536,11 @@
     });
   }
   F.$("#other-list").innerHTML = others.map(function (b) { return timeRow(b, inputType); }).join("");
+  /* reserve.html?booth=kids&slot=kids_am … 完了画面の案内から来たときは、その時間（部）を最初から選んでおく（slot は決まった id だけ受け付ける） */
+  var wantSlot = groupBooth ? F.qs("slot") : "";
+  if (wantSlot && groupBooth.slots.indexOf(wantSlot) >= 0) {
+    F.$$("#other-list input").forEach(function (i) { if (i.value === wantSlot) i.checked = true; });
+  }
   F.$("#other-list").addEventListener("change", refreshOthers);
   F.$("#other-panel").addEventListener("change", refreshOthers);
   F.$("#other-list").addEventListener("change", renderPersonBooths);
@@ -819,11 +846,70 @@
     F.$("#t-map").href = F.mapUrl();
     F.$("#t-contact").textContent = E.contact;
 
+    showAnnai(people);
+
     if (!demo) F.saveLastNo(no);
     } catch (e) { /* 表示の細かい部分で失敗しても、完了画面は出す */ }
     window.scrollTo(0, 0);
     window.setTimeout(function () { window.scrollTo(0, 0); }, 50);
   }
+
+  /* ---------- 完了画面：まだ体験が入っていない方への案内（2026-11-13 試作） ----------
+     ・今回の申し込みで「受ける体験」にチェックが無い人を拾い、年齢と空き状況（受付係の status）から入れる体験を1〜3個すすめる
+     ・来場のみ・当日の来場登録では出さない（この関数は体験の予約の完了画面からだけ呼ぶ）
+     ・同じタブで前に予約した体験は sessionStorage に覚え、つづけて予約したあとに同じ人をもう一度出さない */
+  function showAnnai(people) {
+    var A = window.FestaAnnai, box = F.$("#annai");
+    if (!A || !box || visitMode || onsiteMode) return;
+    try {
+      var earlier = {};
+      try { earlier = JSON.parse(sessionStorage.getItem(A.BOOKED_KEY) || "{}") || {}; } catch (e0) { earlier = {}; }
+      /* 今回入った体験（レースで代表だけにチェックがあった場合の「出る子」も）を覚える */
+      var first = A.plan(people, null, { DATA: F.DATA, earlier: earlier });
+      people.forEach(function (pp, i) {
+        var ids = (pp.booths || []).slice();
+        if (first.covered && first.covered[i]) ids.push(first.covered[i]);
+        if (!ids.length) return;
+        var k = A.personKey(pp), cur = earlier[k] || [];
+        ids.forEach(function (id) { if (cur.indexOf(id) < 0) cur.push(id); });
+        earlier[k] = cur;
+      });
+      try { sessionStorage.setItem(A.BOOKED_KEY, JSON.stringify(earlier)); } catch (e1) { }
+      if (!first.show) return;
+
+      var draw = function (status) {
+        var res = A.plan(people, status, { DATA: F.DATA, earlier: earlier });
+        if (!res.show) return;
+        var html = [];
+        if (!res.statusOk) html.push('<p class="small" style="margin:0 0 10px;">いまの空き状況を読み込めませんでした。下の「空いている体験の一覧へ」からお選びください。</p>');
+        res.persons.forEach(function (p) {
+          var h = ['<div class="annai-person">'];
+          h.push('<p class="annai-name">' + esc(p.name || "お名前なし") + (p.age ? '<span class="small">（' + esc(p.age) + "）</span>" : "") + "</p>");
+          if (res.statusOk && !p.readable) {
+            h.push('<p class="small">生年月日から年齢がわからなかったため、年齢でしぼっていません。下の「空いている体験の一覧へ」からお選びください。</p>');
+          } else if (res.statusOk && !p.items.length) {
+            h.push('<p class="small">いま予約できる体験が見つかりませんでした。当日、空いている体験にその場で入ることもできます。</p>');
+          }
+          p.items.forEach(function (it) {
+            var rest = (typeof it.remaining === "number") ? "・残り" + it.remaining + it.unit : "";
+            h.push('<div class="annai-item"><p><b>' + esc(it.name) + '</b><br><span class="small">' + esc(it.time + rest) + "</span></p>" +
+              '<a class="btn btn-sub" href="' + esc(it.href) + '" data-annai-booth="' + esc(it.id) + '" data-annai-idx="' + p.idx + '">つづけて予約する</a></div>');
+          });
+          h.push("</div>");
+          html.push(h.join(""));
+        });
+        F.$("#annai-list").innerHTML = html.join("");
+        box.hidden = false;
+      };
+      F.fetchStatus().then(draw, function () { draw(null); });
+    } catch (e) { /* 案内が出せなくても、完了画面はそのまま */ }
+  }
+  /* 「つづけて予約する」：次のフォームで、案内した方にだけチェックが入るように（行の番号と体験の id だけを覚える） */
+  F.$("#annai-list").addEventListener("click", function (e) {
+    var a = e.target.closest ? e.target.closest("[data-annai-booth]") : null;
+    if (!a) return;
+    try { sessionStorage.setItem(SUGG_KEY, JSON.stringify({ booth: a.getAttribute("data-annai-booth"), idx: [+a.getAttribute("data-annai-idx")] })); } catch (e2) { }
+  });
 
   F.$("#foot-organizer").textContent = E.organizer;
 })();

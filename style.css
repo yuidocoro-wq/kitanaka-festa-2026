@@ -852,3 +852,15 @@ h1,h2,h3{ text-wrap:balance; }
 @keyframes chara-hop{ 0%,100%{ transform:translateY(0); } 40%{ transform:translateY(-14px); } }
 @media (prefers-reduced-motion:reduce){ .chara-team img, .chara-hop img, .chara-cheer img{ animation:none; } }
 @media print{ .chara-hello, .chara-tip, .chara-hop, .chara-cheer, .chara-cheer-t{ display:none !important; } }
+
+/* ---------- 完了画面：まだ体験が入っていない方への案内（2026-11-13 試作）  緑1色・下敷きは --tint のまま ---------- */
+.annai{ border-color:var(--green-deep); }
+.annai h3{ color:var(--green-deep); margin-bottom:8px; }
+.annai h3 span{ display:inline-block; }   /* 「まだ体験が入っていない／方がいます」で折る（Safari でも語の途中で折れない） */
+.annai-person{ background:var(--tint); border-radius:8px; padding:10px 12px; margin:0 0 12px; }
+.annai-name{ margin:0 0 6px; font-weight:700; overflow-wrap:anywhere; }
+.annai-name .small{ font-weight:400; }
+.annai-item{ background:#fff; border:2px solid var(--line); border-radius:8px; padding:8px 10px; margin:0 0 8px; }
+.annai-item p{ margin:0 0 6px; line-height:1.5; }
+.annai-item .btn{ min-height:48px; margin:0; font-size:17px; }
+.annai-person > p.small{ margin:0; }
