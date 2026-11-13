@@ -856,7 +856,8 @@ h1,h2,h3{ text-wrap:balance; }
 /* ---------- 完了画面：まだ体験が入っていない方への案内（2026-11-13 試作）  緑1色・下敷きは --tint のまま ---------- */
 .annai{ border-color:var(--green-deep); }
 .annai h3{ color:var(--green-deep); margin-bottom:8px; }
-.annai h3 span{ display:inline-block; }   /* 「まだ体験が入っていない／方がいます」で折る（Safari でも語の途中で折れない） */
+.annai h3 span{ display:inline-block; }   /* 語のまとまりで折る（Safari でも語の途中で折れない） */
+.annai-tag{ font-size:14px; font-weight:700; line-height:1.4; padding:2px 10px; margin-right:8px; border-radius:8px; background:var(--green-deep); color:#fff; vertical-align:middle; }   /* 「おすすめ」の札（既存の緑だけ） */
 .annai-person{ background:var(--tint); border-radius:8px; padding:10px 12px; margin:0 0 12px; }
 .annai-name{ margin:0 0 6px; font-weight:700; overflow-wrap:anywhere; }
 .annai-name .small{ font-weight:400; }

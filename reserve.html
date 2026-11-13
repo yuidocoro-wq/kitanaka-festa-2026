@@ -156,10 +156,11 @@
         </ol>
       </div>
 
-      <!-- まだ体験が入っていない方への案内（2026-11-13 試作）。名前・生年月日はこの端末の中だけで使う（annai.js） -->
+      <!-- あわせて おすすめの体験（まだ体験が入っていない方への案内・2026-11-13 試作／11-14 おすすめの欄の形に）。名前・生年月日はこの端末の中だけで使う（annai.js） -->
       <div class="card annai no-print" id="annai" hidden>
-        <h3><span>まだ体験が入っていない</span><span>方がいます</span></h3>
-        <p class="small" id="annai-lead" style="margin:0 0 10px;">体験は、1回の申し込みで1つです。年齢のちがうごきょうだいは、つづけてもう1回お申し込みください。</p>
+        <h3><span class="annai-tag">おすすめ</span><span>あわせて</span> <span>おすすめの体験</span></h3>
+        <p id="annai-lead" style="margin:0 0 4px;">ごいっしょに来られる方に、いまご予約できる体験です。</p>
+        <p class="small" id="annai-note" style="margin:0 0 10px;">体験は、1回の申し込みで1つです。年齢のちがうごきょうだいは、つづけてもう1回お申し込みください。</p>
         <div id="annai-list"></div>
         <a class="btn btn-quiet" id="annai-all" href="index.html#booths">空いている体験の一覧へ</a>
         <p class="small" style="margin:0;">見ているだけの方は、このままで大丈夫です。当日、空いている体験にその場で入ることもできます。</p>
@@ -317,7 +318,7 @@
         var group = !F.isCareBooth(b.id) && !F.isRace(b);
         if (group) anyGroup = true;
         var on = (b.id in prev) ? prev[b.id] : (idx === 0 || group);
-        /* 完了画面の案内「つづけて予約する」から来たときは、案内した方にだけチェック（2026-11-13 試作） */
+        /* 完了画面のおすすめ「この体験も予約する」から来たときは、案内した方にだけチェック（2026-11-13 試作） */
         if (!(b.id in prev) && sugg && sugg.booth === b.id) on = sugg.idx.indexOf(idx) >= 0;
         return '<label class="check" style="margin-bottom:6px;padding:8px 10px;"><input type="checkbox" class="p-b" value="' + esc(b.id) + '"' + (on ? " checked" : "") + '><span class="t"><b style="font-size:16px;">' + esc(boothLabel(b)) + "</b></span></label>";
       }).join("") + (anyGroup && idx > 0 ? '<p class="small" style="margin:2px 0 0;">見学だけの方は、チェックを外してください。</p>' : "");
@@ -884,7 +885,7 @@
         if (!res.statusOk) html.push('<p class="small" style="margin:0 0 10px;">いまの空き状況を読み込めませんでした。下の「空いている体験の一覧へ」からお選びください。</p>');
         res.persons.forEach(function (p) {
           var h = ['<div class="annai-person">'];
-          h.push('<p class="annai-name">' + esc(p.name || "お名前なし") + (p.age ? '<span class="small">（' + esc(p.age) + "）</span>" : "") + "</p>");
+          h.push('<p class="annai-name">' + esc(p.name || "お名前なし") + " さん" + (p.age ? '<span class="small">（' + esc(p.age) + "）</span>" : "") + (p.items.length ? "に おすすめ" : "") + "</p>");
           if (res.statusOk && !p.readable) {
             h.push('<p class="small">生年月日から年齢がわからなかったため、年齢でしぼっていません。下の「空いている体験の一覧へ」からお選びください。</p>');
           } else if (res.statusOk && !p.items.length) {
@@ -893,7 +894,7 @@
           p.items.forEach(function (it) {
             var rest = (typeof it.remaining === "number") ? "・残り" + it.remaining + it.unit : "";
             h.push('<div class="annai-item"><p><b>' + esc(it.name) + '</b><br><span class="small">' + esc(it.time + rest) + "</span></p>" +
-              '<a class="btn btn-sub" href="' + esc(it.href) + '" data-annai-booth="' + esc(it.id) + '" data-annai-idx="' + p.idx + '">つづけて予約する</a></div>');
+              '<a class="btn btn-sub" href="' + esc(it.href) + '" data-annai-booth="' + esc(it.id) + '" data-annai-idx="' + p.idx + '">この体験も予約する</a></div>');
           });
           h.push("</div>");
           html.push(h.join(""));
@@ -904,7 +905,7 @@
       F.fetchStatus().then(draw, function () { draw(null); });
     } catch (e) { /* 案内が出せなくても、完了画面はそのまま */ }
   }
-  /* 「つづけて予約する」：次のフォームで、案内した方にだけチェックが入るように（行の番号と体験の id だけを覚える） */
+  /* 「この体験も予約する」：次のフォームで、案内した方にだけチェックが入るように（行の番号と体験の id だけを覚える） */
   F.$("#annai-list").addEventListener("click", function (e) {
     var a = e.target.closest ? e.target.closest("[data-annai-booth]") : null;
     if (!a) return;
