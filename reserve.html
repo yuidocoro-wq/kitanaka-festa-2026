@@ -156,9 +156,9 @@
         </ol>
       </div>
 
-      <!-- あわせて おすすめの体験（まだ体験が入っていない方への案内・2026-11-13 試作／11-14 おすすめの欄の形に）。名前・生年月日はこの端末の中だけで使う（annai.js） -->
+      <!-- まだ体験が入っていない方（2026-11-13 試作／11-14 名前の下に「おすすめ」の札の形に）。名前・生年月日はこの端末の中だけで使う（annai.js） -->
       <div class="card annai no-print" id="annai" hidden>
-        <h3><span class="annai-tag">おすすめ</span><span>あわせて</span> <span>おすすめの体験</span></h3>
+        <h3>まだ体験が入っていない方</h3>
         <p id="annai-lead" style="margin:0 0 4px;">ごいっしょに来られる方に、いまご予約できる体験です。</p>
         <p class="small" id="annai-note" style="margin:0 0 10px;">体験は、1回の申し込みで1つです。年齢のちがうごきょうだいは、つづけてもう1回お申し込みください。</p>
         <div id="annai-list"></div>
@@ -885,7 +885,8 @@
         if (!res.statusOk) html.push('<p class="small" style="margin:0 0 10px;">いまの空き状況を読み込めませんでした。下の「空いている体験の一覧へ」からお選びください。</p>');
         res.persons.forEach(function (p) {
           var h = ['<div class="annai-person">'];
-          h.push('<p class="annai-name">' + esc(p.name || "お名前なし") + " さん" + (p.age ? '<span class="small">（' + esc(p.age) + "）</span>" : "") + (p.items.length ? "に おすすめ" : "") + "</p>");
+          h.push('<p class="annai-name">' + esc(p.name || "お名前なし") + " さん" + (p.age ? '<span class="small">（' + esc(p.age) + "）</span>" : "") + "</p>");
+          if (p.items.length) h.push('<p class="annai-rec"><span class="annai-tag">おすすめ</span></p>');
           if (res.statusOk && !p.readable) {
             h.push('<p class="small">生年月日から年齢がわからなかったため、年齢でしぼっていません。下の「空いている体験の一覧へ」からお選びください。</p>');
           } else if (res.statusOk && !p.items.length) {
