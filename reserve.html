@@ -56,7 +56,7 @@
 
         <div class="field">
           <label for="f-address"><span class="stepno">2</span>住所（代表の方）<span class="req">必須</span></label>
-          <div class="chara-tip no-print"><img src="img/chara/yukurin.png" alt="中ゆくりん" width="284" height="320"><p id="chara-tip-addr">住所と連絡先を入れてね。メールに番号が届くよ。</p></div>
+          <div class="chara-tip no-print"><img src="img/chara/yukurin.png" alt="中ゆくりん" width="284" height="320"><p id="chara-tip-addr">住所と電話番号を入れてね。メールがあれば番号が届くよ。</p></div>
           <p class="hint">保険の登録に使います。例：北中城村字仲順435</p>
           <input type="text" id="f-address" name="address" autocomplete="street-address" required>
         </div>
@@ -67,9 +67,9 @@
         </div>
 
         <div class="field">
-          <label for="f-email" id="email-label">メールアドレス<span class="req">必須</span></label>
-          <p class="hint" id="email-hint">予約番号のついたメールが届きます。</p>
-          <input type="email" id="f-email" name="email" autocomplete="email" inputmode="email" required>
+          <label for="f-email" id="email-label">メールアドレス<span class="opt">任意</span></label>
+          <p class="hint" id="email-hint">入れると、予約番号とQRコードのついた確認メールが届きます。<br><b>お持ちでない方は空欄でOK</b>（確認メールは届きません。予約のあとに出る画面を写真で残してください）。</p>
+          <input type="email" id="f-email" name="email" autocomplete="email" inputmode="email">
         </div>
 
         <div class="field" id="field-childage" hidden>
@@ -94,8 +94,8 @@
           <label class="check">
             <input type="checkbox" id="f-agree">
             <span class="t">
-              <b id="agree-title">確認メールを受け取ることに同意します</b>
-              <span id="agree-note">予約番号のついたメールをお送りします。お名前・生年月日・住所・連絡先は、イベント保険の登録とこのイベントの連絡だけに使います。</span>
+              <b id="agree-title">入力した内容の使い方に同意します</b>
+              <span id="agree-note">お名前・生年月日・住所・連絡先は、イベント保険の登録とこのイベントの連絡だけに使います。メールアドレスを入れた方には、予約番号のついた確認メールをお送りします。</span>
             </span>
           </label>
         </div>
@@ -224,8 +224,8 @@
       '<p class="muted">空いているブースには、当日その場で入っていただけます（ご予約の方が先になります）。</p>';
     head.className = "card visit-head";
     F.$("#people-hint").textContent = "保険の登録のため、いっしょに来る方を全員ご記入ください（お子さまも）。";
-    F.$("#email-hint").textContent = "受付番号のついたメールが届きます。";
-    F.$("#agree-note").textContent = "受付番号のついたメールをお送りします。お名前・生年月日・住所・連絡先は、イベント保険の登録とこのイベントの連絡だけに使います。";
+    F.$("#email-hint").innerHTML = "入れると、受付番号とQRコードのついた確認メールが届きます。<br><b>お持ちでない方は空欄でOK</b>（確認メールは届きません。登録のあとに出る画面を写真で残してください）。";
+    F.$("#agree-note").textContent = "お名前・生年月日・住所・連絡先は、イベント保険の登録とこのイベントの連絡だけに使います。メールアドレスを入れた方には、受付番号のついた確認メールをお送りします。";
     F.$("#field-other").hidden = true;
     F.$("#field-more").hidden = true;
     F.$("#field-childage").hidden = true;
@@ -655,12 +655,10 @@
     }
     if (!address) { showMsg("err", "住所をご記入ください。保険の登録に使います。"); F.$("#f-address").focus(); return; }
     if (!phone) { showMsg("err", "電話番号をご記入ください。当日のご連絡に使います。"); F.$("#f-phone").focus(); return; }
-    if (onsiteMode) {
-      /* 当日モードはメール任意。入っているときだけ形を確かめる */
-      if (email && email.indexOf("@") < 1) { showMsg("err", "メールアドレスをご確認ください（なくても登録できます。空にしてもかまいません）。"); F.$("#f-email").focus(); return; }
-    } else if (!email || email.indexOf("@") < 1) { showMsg("err", "メールアドレスをご確認ください。確認メールのお届け先になります。"); F.$("#f-email").focus(); return; }
+    /* メールは任意（2026-11-21〜 事前予約・来場登録も。当日モードは前から任意）。入っているときだけ形を確かめる */
+    if (email && !/^[^\s@,;]+@[^\s@,;]+\.[A-Za-z]{2,}$/.test(email)) { showMsg("err", "メールアドレスの形をご確認ください（お持ちでない方は、空欄のままで大丈夫です）。"); F.$("#f-email").focus(); return; }
     if (!visitMode && !ids.length) { showMsg("err", groupBooth ? "時間（部）を1つえらんでください。" : "予約したい体験を1つ以上お選びください。"); return; }
-    if (!F.$("#f-agree").checked) { showMsg("err", onsiteMode ? "「入力した内容を、イベントの保険の登録に使うことに同意します」にチェックをお願いします。" : "「確認メールを受け取ることに同意します」にチェックをお願いします。"); return; }
+    if (!F.$("#f-agree").checked) { showMsg("err", onsiteMode ? "「入力した内容を、イベントの保険の登録に使うことに同意します」にチェックをお願いします。" : "「入力した内容の使い方に同意します」にチェックをお願いします。"); return; }
 
     var payload = {
       action: "reserve",
@@ -696,7 +694,7 @@
         done(F.demoNo(), name, ids.map(function (id) {
           var b = F.booth(id);
           return { id: id, name: b ? b.name : id, time: b ? b.time : "" };
-        }), true);
+        }), true, email ? "sent" : "none");
       }, 400);
       return;
     }
@@ -706,7 +704,7 @@
         done(j.no, j.name || name, j.booths || ids.map(function (id) {
           var b = F.booth(id);
           return { id: id, name: b ? b.name : id, time: b ? b.time : "" };
-        }), false, j.mail || (j.mailed === false ? "queued" : "sent"));
+        }), false, (!email || j.mail === "none") ? "none" : (j.mail || (j.mailed === false ? "queued" : "sent")));
       } else {
         F.$("#sending").hidden = true;
         btn.disabled = false;
@@ -726,6 +724,8 @@
     var people = window.__lastPeople || [];
     /* 確認メールの案内（2026-10-16）: 受付係が「送信待ちに積んだ」ときは、遅れて届くと伝える */
     var queued = (mailState === "queued");
+    /* メールなしの申込（2026-11-21）：確認メールは届かないので、番号とQRを大きく・写真で残す案内を強く・キャンセルは電話 */
+    var noMail = (mailState === "none");
     var mailMsg = demo
       ? "これはテスト表示です。本番ではここに「確認メールをお送りしました」と出ます。"
       : (queued
@@ -815,6 +815,7 @@
       F.$("#t-mail").textContent = mailMsg;
       F.$("#t-map").href = F.mapUrl();
       F.$("#t-contact").textContent = E.contact;
+      if (noMail) showNoMail(no, true, !!qrSvg);
       if (!demo) F.saveLastNo(no);
       window.scrollTo(0, 0);
       window.setTimeout(function () { window.scrollTo(0, 0); }, 50);
@@ -846,6 +847,7 @@
 
     F.$("#t-map").href = F.mapUrl();
     F.$("#t-contact").textContent = E.contact;
+    if (noMail) showNoMail(no, false, !!qrSvg);
 
     showAnnai(people);
 
@@ -853,6 +855,38 @@
     } catch (e) { /* 表示の細かい部分で失敗しても、完了画面は出す */ }
     window.scrollTo(0, 0);
     window.setTimeout(function () { window.scrollTo(0, 0); }, 50);
+  }
+
+  /* ---------- 完了画面：メールなしで申し込んだ方（2026-11-21） ----------
+     確認メールが届かないので、①番号とQRを大きく ②「この画面を写真（スクリーンショット）で残して」を強く
+     ③キャンセル・変更は電話（連絡先はサイトの E.contact をそのまま使う。番号を作らない）。メールのある方の表示は変えない */
+  function showNoMail(no, isVisit, hasQr) {
+    var word = isVisit ? "受付番号" : "予約番号";
+    F.$("#t-splash-s").textContent = isVisit
+      ? "登録は確定しています。確認メールはお送りしませんので、この画面を写真で残してください。"
+      : "ご予約は確定しています。確認メールはお送りしませんので、この画面を写真で残してください。";
+    F.$("#t-no").style.fontSize = "44px";
+    if (hasQr) {
+      F.$("#t-qr").style.width = "280px";
+      F.$("#t-qr").style.maxWidth = "86%";
+      F.$("#t-qr-cap").textContent = "当日、受付でこのQRコードをお見せください";
+      F.$("#t-qr-cap").style.fontSize = "18px";
+      F.$("#t-qr-cap").style.fontWeight = "700";
+      F.$("#t-qr-cap").style.color = "#222";
+    }
+    F.$("#t-qr-note").hidden = true;
+    var shot = F.$("#t-shot");
+    shot.className = "msg msg-info";
+    shot.style.border = "3px solid #C0392B";
+    shot.style.background = "#FFF4F2";
+    shot.innerHTML = '<span style="display:block;font-size:20px;line-height:1.6;color:#B03A2E;">この画面を写真（スクリーンショット）で残してください</span>' +
+      '<span style="display:block;font-weight:400;margin-top:6px;">メールアドレスの入力がなかったため、確認メールは届きません。当日は、この画面のQRコードか' + word + '「' + esc(no) + '」を受付でお見せください。</span>';
+    F.$("#t-mail").hidden = true;
+    F.$("#step-show").textContent = "受付で、この画面のQRコード（または写真に残したQRコード・" + word + "）をお見せください。";
+    F.$("#t-cancel-note").textContent = (isVisit ? "取り消し" : "キャンセルや内容の変更") + "は、お電話でうけたまわります（" + E.contact + "）。" + word + "「" + no + "」をお伝えください。";
+    F.$("#t-more-note").textContent = isVisit
+      ? "気になる体験が出てきたら、上のボタンから予約できます。そのときは体験の予約番号が新しく出ますので、その画面も写真で残し、当日の受付ではその番号をお見せください。"
+      : "ほかの体験も予約したいときは、上のボタンからもう一度お申し込みください（お名前などは、このスマホに覚えています）。予約番号は体験ごとに1つずつ出ます。そのつど、画面を写真で残してください。";
   }
 
   /* ---------- 完了画面：まだ体験が入っていない方への案内（2026-11-13 試作） ----------
