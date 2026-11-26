@@ -74,7 +74,7 @@
 
         <div class="field" id="field-childage" hidden>
           <label for="f-childage">お子さまの月齢・年齢</label>
-          <p class="hint">1歳以下のお子さまは、生年月日から開催日（12月13日）時点の月齢が自動で入ります。ちがうときは書き直してください。</p>
+          <p class="hint">2歳以下のお子さまは、生年月日から開催日（12月13日）時点の月齢が自動で入ります。ちがうときは書き直してください。</p>
           <input type="text" id="f-childage" name="childAge" data-auto="1">
         </div>
 
@@ -187,10 +187,10 @@
 </footer>
 
 <script src="config.js?v=20261016a"></script>
-<script src="booths.js?v=20261126a"></script>
-<script src="app.js?v=20261113a"></script>
+<script src="booths.js?v=20261126b"></script>
+<script src="app.js?v=20261126b"></script>
 <script src="qr.js?v=20261111a"></script>
-<script src="annai.js?v=20261114a"></script>
+<script src="annai.js?v=20261126b"></script>
 <script>
 (function () {
   "use strict";
@@ -416,7 +416,7 @@
     childAgeField.hidden = !show;
   }
 
-  /* ---------- 生年月日 → 開催日時点の月齢（1歳以下のお子さんだけ・自動） ----------
+  /* ---------- 生年月日 → 開催日時点の月齢（2歳以下のお子さんだけ・自動。2026-11-26 1歳児・2歳児レースのため 1歳以下→2歳以下に） ----------
      基準日は開催日 E.date（2026-12-13・日本の暦日）。端末の時計や時差は使わず、年・月・日の整数だけで数える */
   var EV = (function () { var m = String(E.date || "2026-12-13").match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/); return m ? { y: +m[1], m: +m[2], d: +m[3] } : { y: 2026, m: 12, d: 13 }; })();
   function parseBirth(str) {
@@ -439,7 +439,7 @@
       var kind = row.querySelector(".p-kind").value, birthEl = row.querySelector(".p-birth");
       var hint = row.querySelector(".age-hint");
       var b = parseBirth(birthEl.value), n = b ? monthsAtEvent(b) : null;
-      var show = (kind === "子ども" && n !== null && n >= 0 && n < 24);
+      var show = (kind === "子ども" && n !== null && n >= 0 && n < 36);
       if (show) {
         if (!hint) { hint = document.createElement("p"); hint.className = "small age-hint"; birthEl.parentNode.appendChild(hint); }
         hint.textContent = "開催日（12月13日）には " + ageText(n);
@@ -645,6 +645,24 @@
       people.forEach(function (pp) { if (pp.booths.indexOf(cb.id) >= 0) n++; });
       if (n < 1) { showMsg("err", "「" + boothLabel(cb) + "」を受ける人に、チェックをつけてください。"); return; }
       countsBy[cb.id] = n;
+    }
+    /* 1歳児・2歳児レースは、開催日（12/13）の年齢で分ける（2026-11-26 ハピスマさんと合意）。
+       チェックが入った「子ども」の年齢が合わないときだけ止める（代表の大人だけにチェックが入っているときは見ない）。
+       歩き始めたばかりの子は年齢に関係なく よちよちレース */
+    var AGE_RACE = { issai: { min: 12, max: 23, age: "1歳" }, nisai: { min: 24, max: 35, age: "2歳" } };
+    for (var ap = 0; ap < people.length; ap++) {
+      if (people[ap].kind !== "子ども") continue;
+      var apb = parseBirth(people[ap].birth), apn = apb ? monthsAtEvent(apb) : null;
+      if (apn === null || apn < 0) continue;
+      for (var rid in AGE_RACE) {
+        if (!Object.prototype.hasOwnProperty.call(AGE_RACE, rid) || people[ap].booths.indexOf(rid) < 0) continue;
+        var ar = AGE_RACE[rid];
+        if (apn < ar.min || apn > ar.max) {
+          showMsg("err", people[ap].name + " さんは、開催日（12月13日）に " + ageText(apn) + "です。「" + F.booth(rid).name + "」は12月13日に" + ar.age +
+            "のお子さんのレースです。年齢に合うレースをお選びください（歩き始めたばかりのお子さんは、年齢に関係なく「よちよちレース」へ）。");
+          return;
+        }
+      }
     }
     /* ケアブースは事前予約お一人1つまで（2026-11-02）。別の申込で2つ目になる場合は受付係が止めます */
     for (var cp = 0; cp < people.length; cp++) {

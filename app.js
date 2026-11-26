@@ -49,8 +49,10 @@
     return DATA.booths.filter(function (b) { return b.reserve === true; });
   }
 
-  /* レース系＝子どもの月齢・年齢をきく対象 */
-  function isRace(b) { return !!b && (b.id === "haihai" || b.id === "yochiyochi"); }
+  /* レース系＝子どもの月齢・年齢をきく対象。1予約＝1組で数える（受付係の GROUP_UNIT_IDS と同じ顔ぶれにする）
+     2026-11-26 1歳児レース（issai）・2歳児レース（nisai）を足した */
+  var RACE_IDS = ["haihai", "yochiyochi", "issai", "nisai"];
+  function isRace(b) { return !!b && RACE_IDS.indexOf(b.id) >= 0; }
 
   /* 「仮」のブースの注記 */
   function provisionalNote(b) {

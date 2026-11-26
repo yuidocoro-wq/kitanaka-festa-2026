@@ -9,8 +9,13 @@
   /* ---------- すすめる体験と年齢の対応表（★運営の判断が要るところ・仮の表） ----------
      months＝開催日時点の月齢／grade＝開催日時点の学年（1〜6＝小学生、7〜9＝中学生、10以上＝高校生以上。0以下＝未就学）
      years＝開催日時点の満年齢／parent:true＝保護者もいっしょに入る体験（大人は、家族のだれかが入る・入れるときだけ案内）
-     上から順に、1人あたり最大3つまですすめます */
+     上から順に、1人あたり最大3つまですすめます
+     2026-11-26 1歳児レース（issai）・2歳児レース（nisai）を足した（ハピスマさんと合意）：
+       年齢は開催日（12/13）の満年齢。1歳＝12〜23か月・2歳＝24〜35か月。
+       歩き始めたばかりの子は年齢に関係なく「よちよち」だが、生年月日からは分からないので、年齢のレースを先に・よちよちも並べて出す */
   var RULES = [
+    { booth: "issai",       label: "1歳（12月13日に1歳）",             test: function (a) { return a.months >= 12 && a.months <= 23; } },
+    { booth: "nisai",       label: "2歳（12月13日に2歳）",             test: function (a) { return a.months >= 24 && a.months <= 35; } },
     { booth: "haihai",      label: "0〜1歳（ハイハイの子）",           test: function (a) { return a.months >= 0 && a.months <= 23; } },
     { booth: "yochiyochi",  label: "0歳10か月〜2歳",                   test: function (a) { return a.months >= 10 && a.months <= 35; } },
     { booth: "kids_am",     label: "1歳〜小学生（12歳）と保護者",      test: function (a) { return a.months >= 12 && a.grade <= 6; }, parent: true },
@@ -19,7 +24,7 @@
     { booth: "adult",       label: "大人（親子でも可）",               test: function (a) { return a.grade >= 10; } }
   ];
   var MAX_PER_PERSON = 3;
-  var RACES = { haihai: 1, yochiyochi: 1 };
+  var RACES = { haihai: 1, yochiyochi: 1, issai: 1, nisai: 1 };
 
   /* ---------- 生年月日 → 開催日時点の月齢・満年齢・学年 ---------- */
   function evDate(DATA) {
@@ -125,7 +130,12 @@
       var b = booth(rule.booth);
       if (!b || !b.reserve) return false;
       if (!available(rule.booth)) return false;
-      for (var i = 0; i < familyBooked.length; i++) if (overlaps(familyBooked[i], b)) return false;
+      /* レースどうし（よちよち・1歳児・2歳児＝同じ13:35〜14:05の中で順に走る）は重なりとみなさない。
+         保護者はゴールで待つので、年齢のちがうきょうだいが別々のレースに出られる（2026-11-26） */
+      for (var i = 0; i < familyBooked.length; i++) {
+        if (RACES[familyBooked[i].id] && RACES[b.id]) continue;
+        if (overlaps(familyBooked[i], b)) return false;
+      }
       return true;
     }
 
