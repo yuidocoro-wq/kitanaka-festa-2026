@@ -181,7 +181,7 @@ window.FESTA_DATA = {
   {
    "id": "seitai_yuimaru",
    "illust": "img/illust/seitai_yuimaru.jpg",
-   "name": "リラクゼーション整体体験（ゆいまーる）",
+   "name": "リラクゼーション整体体験（ゆいまぁる）",
    "short": "整体",
    "zone": "C-2 ケアブース",
    "time": "10時・11時・12時・13時・14時（各20分）",
@@ -641,7 +641,7 @@ window.FESTA_DATA = {
    "line": ""
   },
   "yuimaru": {
-   "name": "ゆいまーる",
+   "name": "ゆいまぁる",
    "people": "池原 あかねさん",
    "tag": "よもぎ蒸し・骨盤調整・水整体",
    "intro": "北中城小学校のすぐ近く。よもぎ蒸しや骨盤調整、水を使う新しい施術「水整体」が人気の完全予約制サロンです。",

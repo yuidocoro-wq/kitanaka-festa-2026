@@ -123,7 +123,7 @@
 
 <script src="jsQR.js?v=20261016a"></script>
 <script src="config.js?v=20261016a"></script>
-<script src="booths.js?v=20261120a"></script>
+<script src="booths.js?v=20261126a"></script>
 <script src="app.js?v=20261113a"></script>
 <script>
 (function () {
@@ -805,7 +805,7 @@
        予約で埋まっていても空いている時間に入れる。同じ名前の枠は1行にまとめ、15:00まで出す。
      ・時刻で消すのは開催日（booths.json の event.date）だけ。前日までのリハーサルでは全部出る。
      stat … fetchStatus() の結果（読めなかったときは null → 残りの数なしで全部出す） */
-  /* 足もみ・ゆいまーるの当日枠（GAS の DAY_SLOTS と同じ中身にする） */
+  /* 足もみ・ゆいまぁるの当日枠（GAS の DAY_SLOTS と同じ中身にする） */
   var DAY_SLOTS = {
     ashimomi: { mins: 10, times: ["10:30", "11:30", "12:30", "13:30", "14:30"] },
     seitai_yuimaru: { mins: 20, times: ["10:30", "11:30", "12:30", "13:30", "14:30"] }
@@ -829,7 +829,7 @@
         var key = par ? par.id : b.id;
         if (seen[key]) return;
         seen[key] = true;
-        /* 足もみ・ゆいまーる：空いている枠だけを時間ごとに出す（予約枠の空き＋当日枠 10:30〜14:30）（2026-11-12） */
+        /* 足もみ・ゆいまぁる：空いている枠だけを時間ごとに出す（予約枠の空き＋当日枠 10:30〜14:30）（2026-11-12） */
         var dc = DAY_SLOTS[key];
         if (dc && stat && stat[key + "_" + dc.times[0].replace(":", "")]) {
           var cand = [];
